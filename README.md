@@ -2,7 +2,7 @@
 
 An unofficial, bilingual (PT/EN) web planner for **Genética 2026 – 71º Congresso Brasileiro de Genética** (Florianópolis, 29 Sep – 2 Oct 2026).
 
-**Live site:** https://YOUR-USERNAME.github.io/genetica2026-planner/
+**Live site:** https://arielmmaia.github.io/genetica2026-planner/
 
 ![Screenshot of the planner](screenshot.png)
 
