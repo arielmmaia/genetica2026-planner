@@ -6,7 +6,7 @@ An unofficial, bilingual (PT/EN) web planner for **Genética 2026 – 71º Congr
 
 ![Screenshot of the planner](screenshot.png)
 
-![Screenshot of the planner](screenshot2.png)
+![Screenshot of the planner](screenshot-2.png)
 
 ## What it does
 
