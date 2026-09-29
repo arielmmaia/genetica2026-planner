@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Planejador não oficial da programação do Genética 2026 (71º Congresso Brasileiro de Genética). Unofficial program planner.">
+<style>[hidden]{display:none!important}img{max-width:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Unofficial Genética 2026 Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700;800&family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400&family=Montserrat:wght@600&display=swap">
+<style>
+/* Layout: teal topbar + white sticky header (as on genetica2026.com.br); Program = uppercase day switcher, vertical timeline
+   with bold teal times and dots, session cards with corner tabs (room top-left, track top-right). Schedule = conflicts + time grid.
+   Brand tokens from the official site: accent #029B7C, primary #020D19, secondary #E2E8E2, Onest + Inter (+ Montserrat labels). */
+:root{
+  --bg:#F1F4F1; --surface:#FFFFFF; --surface-2:#E9EEE9; --ink:#020D19; --muted:#5F6A68; --line:#020D1917; --line-2:#DCE3DE;
+  --accent:#029B7C; --accent-dark:#027A62; --accent-soft:#E0F2ED; --on-accent:#FFFFFF;
+  --topbar:#029B7C; --header:#FFFFFF; --tag-grey:#6C757D;
+  --danger:#D64545; --danger-bg:#FCEAEA; --warn:#94620A; --warn-bg:#FBF1DC;
+  --hatch:rgba(2,13,25,.055); --shadow:0 4px 15px rgba(2,13,25,.10); --shadow-lg:0 10px 40px rgba(2,13,25,.22);
+  --f-display:"Onest","Inter",system-ui,sans-serif;
+  --f-body:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-label:"Montserrat","Inter",system-ui,sans-serif;
+  --r-s1:#2E63B0; --r-s3:#1C8DB5; --r-s5:#4B4FC0;
+  --r-a2:#2D8A55; --r-a4:#6C8A1E; --r-a6:#177A6B;
+  --r-jur:#C4552A; --r-joa:#AD760B; --r-arm:#B63A6A; --r-rib:#8750B4;
+  --r-main:#1E2B36; --r-praca:#8C6A3E; --r-post:#5E7A88; --r-off:#737B79;
+  --pmm:1.15px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#020D19; --surface:#0A1726; --surface-2:#0F2031; --ink:#E7EEEB; --muted:#94A3A6; --line:#FFFFFF1A; --line-2:#1B2C3D;
+  --accent:#1DB894; --accent-dark:#17A383; --accent-soft:#0B2E2C; --on-accent:#021410;
+  --topbar:#027A62; --header:#061322; --tag-grey:#4B5563;
+  --danger:#F07171; --danger-bg:#3A1519; --warn:#E3AE4A; --warn-bg:#2E2412;
+  --hatch:rgba(231,238,235,.05); --shadow:0 4px 15px rgba(0,0,0,.35); --shadow-lg:0 10px 40px rgba(0,0,0,.55);
+  --r-main:#4A5E70; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#020D19; --surface:#0A1726; --surface-2:#0F2031; --ink:#E7EEEB; --muted:#94A3A6; --line:#FFFFFF1A; --line-2:#1B2C3D;
+  --accent:#1DB894; --accent-dark:#17A383; --accent-soft:#0B2E2C; --on-accent:#021410;
+  --topbar:#027A62; --header:#061322; --tag-grey:#4B5563;
+  --danger:#F07171; --danger-bg:#3A1519; --warn:#E3AE4A; --warn-bg:#2E2412;
+  --hatch:rgba(231,238,235,.05); --shadow:0 4px 15px rgba(0,0,0,.35); --shadow-lg:0 10px 40px rgba(0,0,0,.55);
+  --r-main:#4A5E70; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font:15px/1.5 var(--f-body);margin:0;transition:background-color .25s ease,color .25s ease}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono,.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:16px}
+.label{font:600 11px/1.2 var(--f-label);letter-spacing:2px;text-transform:uppercase}
+
+/* topbar + header, after the congress site */
+.topbar{background:var(--topbar);color:#fff;font-size:12.5px}
+.topbar .wrap{display:flex;flex-wrap:wrap;gap:4px 18px;padding-block:7px;align-items:center}
+.topbar span{display:inline-flex;gap:6px;align-items:center;opacity:.95}
+.topbar .right{margin-left:auto}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--header);box-shadow:0 0 12px rgba(2,13,25,.12);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;margin-right:auto}
+.helix{flex:0 0 auto;color:var(--accent)}
+.brand h1{font:800 23px/1 var(--f-display);letter-spacing:-.02em;margin:0;white-space:nowrap}
+.brand h1 span{color:var(--accent)}
+.brand small{display:block;color:var(--muted);font:500 11px/1.3 var(--f-label);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+.tabs{display:flex;gap:4px;background:var(--surface-2);border-radius:100px;padding:4px}
+.tab{border:0;background:none;padding:8px 16px;border-radius:100px;font:600 14px/1.2 var(--f-display);color:var(--muted);display:flex;align-items:center;gap:7px;transition:background-color .2s,color .2s}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+.count{font:600 11.5px/1 var(--f-body);font-variant-numeric:tabular-nums;padding:3px 7px;border-radius:100px;background:var(--surface);color:var(--ink)}
+.tab[aria-selected="true"] .count{background:rgba(255,255,255,.22);color:inherit}
+.count.bad{background:var(--danger);color:#fff}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.sync.ok i{background:var(--accent)}
+.theme{width:40px;height:40px;border-radius:50%;border:1px solid var(--line-2);background:var(--surface);display:grid;place-items:center;color:var(--ink);transition:background-color .2s,color .2s}
+.theme:hover{color:var(--accent);border-color:var(--accent)}
+.theme .sun{display:none}
+:root[data-theme="dark"] .theme .sun{display:block} :root[data-theme="dark"] .theme .moon{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .theme .sun{display:block} :root:not([data-theme="light"]) .theme .moon{display:none}}
+
+main{padding-block:22px 64px}
+section[hidden]{display:none}
+.sechead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+.sechead h2{margin:0;font:800 clamp(24px,4vw,34px)/1.05 var(--f-display);letter-spacing:-.02em}
+.sechead h2 span{color:var(--accent)}
+.sechead p{margin:0;color:var(--muted);font-size:14px}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.search{flex:1 1 280px;min-width:0;position:relative}
+.search input{width:100%;padding:12px 16px 12px 42px;border-radius:100px;border:1px solid var(--line-2);background:var(--surface)}
+.search input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--accent)}
+.toolbar select{padding:10px 14px;border-radius:100px;border:1px solid var(--line-2);background:var(--surface);max-width:100%}
+.chk{display:flex;align-items:center;gap:7px;font-size:13.5px;padding:9px 14px;border-radius:100px;border:1px solid var(--line-2);background:var(--surface);cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent);margin:0}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:8px 4px}
+
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:6px 0 18px;align-items:center}
+.legend .grp{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.legend .grp b{color:var(--muted);margin-right:4px}
+.rpill{--rc:var(--r-off);display:inline-flex;align-items:center;gap:5px;border:0;border-radius:6px;padding:3px 9px;font:600 12px/1.4 var(--f-body);background:var(--rc);color:#fff;white-space:nowrap}
+.legend .rpill{transition:opacity .15s}
+.legend .rpill.dim{opacity:.28}
+
+/* day switcher: uppercase Montserrat, accent fill on the active day (site's .day-btn) */
+.days{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:5px;border-radius:12px;background:var(--surface);border:1px solid var(--line-2);box-shadow:var(--shadow);margin-bottom:26px}
+.day{border:0;background:none;border-radius:8px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--accent);transition:background-color .35s cubic-bezier(.19,1,.22,1),color .25s;min-width:0}
+.day b{font:600 12px/1.2 var(--f-label);letter-spacing:2px;text-transform:uppercase}
+.day small{font-size:11.5px;color:var(--muted)}
+.day .meta{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.day .meta .g{color:var(--accent);font-weight:600}
+.day[aria-selected="true"]{background:var(--accent);color:var(--on-accent)}
+.day[aria-selected="true"] small,.day[aria-selected="true"] .meta,.day[aria-selected="true"] .meta .g{color:var(--on-accent);opacity:.92}
+
+/* timeline */
+#blocks{position:relative}
+#blocks::before{content:"";position:absolute;left:131px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,transparent,color-mix(in oklab,var(--accent) 55%,transparent) 6%,color-mix(in oklab,var(--accent) 55%,transparent) 94%,transparent)}
+.block{position:relative;display:grid;grid-template-columns:112px minmax(0,1fr);gap:40px;padding-block:14px}
+.block::before{content:"";position:absolute;left:125px;top:22px;width:11px;height:11px;border-radius:50%;background:var(--surface);border:2px solid var(--accent);z-index:1;transition:transform .25s,background-color .25s,box-shadow .25s}
+.block:hover::before{background:var(--accent);box-shadow:0 0 12px var(--accent);transform:scale(1.35)}
+.block .when{position:sticky;top:96px;align-self:start}
+.when .t{font:800 17px/1.15 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.when .t i{font-style:normal;display:block;font-size:13px;font-weight:600;opacity:.75}
+.when .k{margin-top:6px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}
+.ambient-row{position:relative;display:grid;grid-template-columns:112px minmax(0,1fr);gap:40px;padding-block:8px;color:var(--muted);font-size:13.5px;align-items:center}
+.ambient-row::before{content:"";position:absolute;left:128px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--line-2)}
+.ambient-row .mono{font-weight:600}
+.ambient-row .pill{justify-self:start;padding:4px 12px;border-radius:100px;background:var(--surface-2)}
+
+/* session card: 2px border in room color, corner tabs like the site's .room-tag / .info-card-area */
+.card{--rc:var(--r-off);position:relative;text-align:left;border:2px solid color-mix(in oklab,var(--rc) 55%,var(--surface));background:var(--surface);border-radius:8px;padding:34px 14px 12px;display:flex;flex-direction:column;gap:7px;min-width:0;overflow:hidden;box-shadow:0 2px 8px rgba(2,13,25,.05);transition:transform .15s ease,box-shadow .2s ease,border-color .2s}
+.card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px);border-color:var(--rc)}
+.tab-room{position:absolute;top:0;left:0;padding:3px 10px;border-radius:0 0 6px 0;font-size:12px;font-weight:600;background:var(--rc);color:#fff;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab-area{position:absolute;top:0;right:0;padding:3px 10px;border-radius:0 0 0 6px;font-size:12px;background:var(--tag-grey);color:#fff;max-width:45%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card h3{margin:0;font:600 15px/1.32 var(--f-display);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty}
+.card .who{font-size:12.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card .foot{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+.card.going{border-color:var(--rc);background:color-mix(in oklab,var(--rc) 7%,var(--surface))}
+.card.maybe{border-style:dashed;border-color:var(--rc)}
+.card .open{position:absolute;inset:0;border:0;background:none;border-radius:8px;padding:0}
+.quick{position:relative;z-index:2;margin-left:auto;display:inline-flex;align-items:center;gap:5px;border-radius:100px;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);font:600 12.5px/1 var(--f-body);padding:6px 12px;transition:background-color .2s,color .2s}
+.quick:hover{background:var(--accent-soft)}
+.card.going .quick{background:var(--accent);color:var(--on-accent)}
+.card.maybe .quick{border-style:dashed}
+.chip{font:500 11px/1.5 var(--f-body);padding:1px 8px;border-radius:100px;border:1px solid var(--line-2);color:var(--muted);background:var(--surface);white-space:nowrap}
+.chip.pt{border-color:var(--warn);color:var(--warn);background:var(--warn-bg)}
+.chip.star{border-color:var(--accent);color:var(--accent)}
+.status{font:600 11px/1.5 var(--f-body);padding:2px 9px;border-radius:100px}
+.status.going{background:var(--accent);color:var(--on-accent)}
+.status.maybe{border:1px dashed var(--accent);color:var(--accent)}
+.status.clash{background:var(--danger);color:#fff}
+.empty{padding:44px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:30px;background:var(--surface)}
+.empty b{display:block;color:var(--ink);font:700 19px/1.3 var(--f-display);margin-bottom:4px}
+
+/* dialog: room color under the site's hero gradient */
+dialog{border:0;padding:0;border-radius:20px;width:min(700px,calc(100vw - 24px));max-height:calc(100dvh - 32px);background:var(--surface);color:var(--ink);box-shadow:var(--shadow-lg);overflow:hidden}
+dialog::backdrop{background:rgba(2,13,25,.6);backdrop-filter:blur(2px)}
+.dlg{display:flex;flex-direction:column;max-height:calc(100dvh - 32px)}
+.dlg-head{--rc:var(--r-off);background:linear-gradient(90deg,rgba(2,13,25,.55) 0%,rgba(2,13,25,0) 100%),var(--rc);color:#fff;padding:18px 20px 16px;display:flex;flex-direction:column;gap:9px;position:relative}
+.dlg-head .x{position:absolute;z-index:2;top:12px;right:12px;border:2px solid rgba(255,255,255,.8);background:transparent;color:#fff;width:34px;height:34px;border-radius:100px;font-size:18px;line-height:1}
+.dlg-head .x:hover{background:rgba(255,255,255,.15)}
+.dlg-head .eyebrow{padding-right:44px;opacity:.9}
+.dlg-head h2{margin:0;font:700 22px/1.2 var(--f-display);letter-spacing:-.01em;text-wrap:balance;padding-right:30px}
+.dlg-head .meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px}
+.dlg-body{padding:18px 20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:18px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:100px;background:var(--surface-2)}
+.seg button{border:0;background:none;border-radius:100px;padding:10px 6px;font:600 14px/1.2 var(--f-display);color:var(--muted);transition:background-color .2s,color .2s}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg button.go[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.alert{border-radius:12px;padding:10px 14px;font-size:13.5px}
+.alert.bad{background:var(--danger-bg);color:var(--danger)}
+.alert.warn{background:var(--warn-bg);color:var(--warn)}
+.sec h4{margin:0 0 8px;color:var(--muted)}
+.people{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.person{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 10px;border-radius:15px;background:var(--surface-2)}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:700 13px/1 var(--f-display);background:var(--surface);color:var(--accent);border:2px solid var(--accent)}
+.person .talk{font-weight:600;font-size:14px;line-height:1.35;font-family:var(--f-display)}
+.person .nm{font-size:13.5px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.person .af{font-size:12.5px;color:var(--muted);font-style:italic}
+.role{background:var(--accent);color:var(--on-accent);padding:1px 8px;border-radius:200px;font-size:11px;font-weight:600}
+.starbtn{border:1.5px solid var(--line-2);background:var(--surface);border-radius:100px;width:36px;height:36px;display:grid;place-items:center;color:var(--muted)}
+.starbtn[aria-pressed="true"]{color:var(--on-accent);background:var(--accent);border-color:var(--accent)}
+.note{font-size:13.5px;color:var(--muted);line-height:1.55;max-width:65ch}
+textarea{width:100%;min-height:78px;border-radius:15px;border:1px solid var(--line-2);background:var(--surface-2);padding:12px;resize:vertical}
+textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* schedule */
+.sumbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.stat{display:flex;align-items:baseline;gap:7px;background:var(--surface);border:1px solid var(--line-2);border-radius:100px;padding:8px 16px}
+.stat b{font:800 22px/1 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--muted)}
+.stat.bad{border-color:var(--danger);background:var(--danger-bg)} .stat.bad b,.stat.bad span{color:var(--danger)}
+.spacer{flex:1}
+.btn{border:1.5px solid var(--accent);background:transparent;color:var(--accent);border-radius:100px;padding:10px 20px;font:600 14px/1.2 var(--f-display);display:inline-flex;gap:8px;align-items:center;transition:background-color .2s,color .2s}
+.btn:hover{background:var(--accent-soft)}
+.btn.primary{background:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.exportopts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px;margin:-2px 0 16px;color:var(--muted)}
+.exportopts select{padding:7px 12px;border-radius:100px;border:1px solid var(--line-2);background:var(--surface)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:100px;font-size:14px;z-index:50;max-width:calc(100vw - 32px);box-shadow:var(--shadow-lg)}
+.copybox{width:100%;min-height:140px;font:12px/1.4 ui-monospace,Menlo,monospace}
+
+.panel{background:var(--surface);border:1px solid var(--line-2);border-radius:20px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.panel.bad{border-color:color-mix(in oklab,var(--danger) 55%,var(--line-2))}
+.panel>h3{margin:0 0 10px;font:700 17px/1.2 var(--f-display);display:flex;gap:8px;align-items:center}
+.panel>h3 .dot{width:9px;height:9px;border-radius:50%;background:var(--danger)}
+.panel.hop>h3 .dot{background:var(--warn)}
+.conf{border-top:1px solid var(--line-2);padding-block:12px;display:flex;flex-direction:column;gap:8px}
+.conf:first-of-type{border-top:0;padding-top:2px}
+.conf .hd{color:var(--accent)}
+.conf .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.opt{--rc:var(--r-off);border:2px solid color-mix(in oklab,var(--rc) 55%,var(--surface));background:var(--surface);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;min-width:0}
+.opt .t{font:600 14px/1.3 var(--f-display);cursor:pointer}
+.opt .r{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.opt .keep{border:0;background:var(--accent);color:var(--on-accent);border-radius:100px;padding:6px 12px;font-weight:600;font-size:12.5px;margin-left:auto}
+.opt .keep:hover{background:var(--accent-dark)}
+.conf .ack{align-self:flex-start;border:0;background:none;color:var(--muted);font-size:12.5px;text-decoration:underline;padding:0}
+.hopline{font-size:13.5px;padding:6px 0;border-top:1px solid var(--line-2)}
+.hopline:first-of-type{border-top:0}
+
+.viewtog{display:inline-flex;gap:4px;padding:4px;border-radius:100px;background:var(--surface-2)}
+.viewtog button{border:0;background:none;padding:8px 16px;border-radius:100px;font:600 13.5px/1.2 var(--f-display);color:var(--muted)}
+.viewtog button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+
+.calwrap{overflow-x:auto;border:1px solid var(--line-2);border-radius:20px;background:var(--surface);box-shadow:var(--shadow)}
+.cal{display:grid;grid-template-columns:54px repeat(4,minmax(170px,1fr));min-width:max-content}
+.cal .colh{position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--line-2);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.cal .colh b{font:600 12px/1.2 var(--f-label);letter-spacing:2px;text-transform:uppercase;color:var(--accent)}
+.cal .colh small{color:var(--muted);font-size:12px}
+.cal .colh.today{background:var(--accent-soft)}
+.cal .axis{position:relative;border-right:1px solid var(--line-2)}
+.cal .axis span{position:absolute;right:8px;transform:translateY(-50%);font:600 11px/1 var(--f-body);font-variant-numeric:tabular-nums;color:var(--muted)}
+.cal .col{position:relative;border-right:1px solid var(--line-2);background-image:linear-gradient(to bottom,var(--line-2) 1px,transparent 1px);background-size:100% calc(60 * var(--pmm))}
+.cal .col:last-child{border-right:0}
+.amb{position:absolute;left:0;right:0;background:repeating-linear-gradient(135deg,var(--hatch) 0 6px,transparent 6px 12px);border-top:1px dashed var(--line-2);border-bottom:1px dashed var(--line-2);font-size:11px;color:var(--muted);padding:2px 6px;overflow:hidden;z-index:0}
+.ev{--rc:var(--r-off);position:absolute;z-index:1;border-radius:8px;padding:4px 7px;overflow:hidden;text-align:left;border:1.5px solid var(--rc);background:color-mix(in oklab,var(--rc) 14%,var(--surface));font-size:12px;line-height:1.25;display:flex;flex-direction:column;gap:2px;color:var(--ink)}
+.ev.going{background:var(--rc);color:#fff}
+.ev.maybe{border-style:dashed}
+.ev.clash{outline:2.5px solid var(--danger);outline-offset:1px;z-index:2}
+.ev .et{font:600 12.5px/1.25 var(--f-display);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ev .em{font-size:10.5px;font-variant-numeric:tabular-nums;opacity:.9}
+.ev .flag{position:absolute;right:3px;top:3px;background:var(--danger);color:#fff;font:700 9.5px/1 var(--f-body);padding:2px 5px;border-radius:100px;letter-spacing:.04em}
+
+.agenda h3{margin:22px 0 8px;color:var(--accent)}
+.agenda h3:first-child{margin-top:0}
+.arow{--rc:var(--r-off);position:relative;display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;padding:30px 14px 12px;background:var(--surface);border:2px solid color-mix(in oklab,var(--rc) 55%,var(--surface));border-radius:8px;margin-bottom:10px;cursor:pointer;text-align:left;width:100%;overflow:hidden}
+.arow.clash{border-color:var(--danger)}
+.arow .t{font:800 15px/1.3 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.arow .ti{font:600 15px/1.3 var(--f-display)}
+.arow .m{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.arow .sub{font-size:12.5px;color:var(--muted);margin-top:5px}
+.arow .nt{font-size:13px;margin-top:6px;padding:7px 10px;border-radius:12px;background:var(--surface-2);white-space:pre-wrap}
+
+@media (max-width:640px){
+  .topbar .right{display:none}
+  #blocks::before,.block::before,.ambient-row::before{display:none}
+  .block{grid-template-columns:1fr;gap:8px}
+  .block .when{position:static;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .when .t i{display:inline;margin-left:4px}
+  .ambient-row{grid-template-columns:auto 1fr;gap:10px}
+  .brand h1{font-size:20px}
+  .brand small,.sync{display:none}
+  .helix{width:26px;height:26px}
+  .tab{padding:8px 12px}
+  .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .toolbar .search{grid-column:1/-1}
+  .toolbar select,.toolbar .chk{width:100%;min-width:0;font-size:13px}
+  .toolbar .chk{padding:9px 12px}
+  .legend{flex-wrap:nowrap;overflow-x:auto;margin-inline:-16px;padding:2px 16px 6px;scrollbar-width:none}
+  .legend .grp{flex-wrap:nowrap}
+  .sechead p{font-size:13px}
+  .cards{grid-template-columns:1fr}
+  .day{padding:8px 2px}
+  .day b{letter-spacing:1px}
+  .day small{display:none}
+  dialog{width:100vw;max-width:100vw;margin:auto 0 0;border-radius:20px 20px 0 0;max-height:92dvh}
+  .dlg{max-height:92dvh}
+  .arow{grid-template-columns:1fr;gap:4px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* public edition additions */
+.langbtn{height:40px;border-radius:100px;border:1px solid var(--line-2);background:var(--surface);display:inline-flex;align-items:center;padding:3px;gap:2px}
+.langbtn span{font:600 12px/1 var(--f-label);letter-spacing:1px;padding:8px 9px;border-radius:100px;color:var(--muted)}
+.langbtn span.on{background:var(--accent);color:var(--on-accent)}
+.topbar a{color:#fff;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+footer.foot{border-top:1px solid var(--line-2);background:var(--surface);color:var(--muted);font-size:12.5px;line-height:1.6}
+footer.foot .wrap{padding-block:18px 28px;display:flex;flex-direction:column;gap:6px;max-width:1280px}
+footer.foot p{margin:0;max-width:90ch}
+footer.foot a{color:var(--accent);font-weight:600}
+.share{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.share .col{display:flex;flex-direction:column;gap:8px;min-width:0}
+.share .col p{margin:0}
+.codebox{display:flex;gap:8px;min-width:0}
+.codebox input{flex:1;min-width:0;padding:10px 14px;border-radius:100px;border:1px solid var(--line-2);background:var(--surface-2);font:500 13px/1.2 ui-monospace,Menlo,monospace}
+.codebox input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.friendbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;border:2px dashed var(--accent);background:var(--accent-soft);border-radius:20px;padding:10px 14px;margin-bottom:14px;font-size:14px}
+.friendbar b{font-family:var(--f-display)}
+.friendbar .spacer{flex:1}
+.ev.friend{border:1.5px dotted var(--ink);background:repeating-linear-gradient(135deg,color-mix(in oklab,var(--rc) 16%,var(--surface)) 0 7px,var(--surface) 7px 14px);color:var(--ink)}
+.ev .fb{align-self:flex-start;font:600 10px/1.2 var(--f-body);padding:1px 6px;border-radius:100px;background:var(--ink);color:var(--bg)}
+.chip.friend{border-style:dotted;border-color:var(--ink);color:var(--ink)}
+.arow.friend{border-style:dotted}
+details.help{background:var(--surface);border:1px solid var(--line-2);border-radius:20px;padding:10px 16px;margin-bottom:16px}
+details.help summary{cursor:pointer;font:600 14px/1.4 var(--f-display);color:var(--accent)}
+details.help ol{margin:8px 0 4px;padding-left:20px;font-size:13.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+@media (max-width:640px){
+  .langbtn{height:36px} .langbtn span{padding:7px 7px} .theme{width:36px;height:36px}
+  .topbar .right{display:inline-flex!important;margin-left:0;flex-wrap:wrap}
+  .top .brand{order:0} .top .langbtn,.top .theme{order:1} .top .tabs{order:2;width:100%} .top .tab{flex:1;justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>29/09 – 02/10/2026 · Florianópolis-SC</span>
+  <span class="right"><span data-t="unofficial"></span>&nbsp;·&nbsp;<a href="https://genetica2026.com.br/" target="_blank" rel="noopener" data-t="officialLink"></a></span>
+</div></div>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="helix" width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 3c0 7 14 7 14 13S9 22 9 29"/><path d="M23 3c0 7-14 7-14 13s14 6 14 13"/><path d="M12 7.5h8M11 12h10M11 20h10M12 24.5h8" stroke-width="1.8" opacity=".55"/></svg>
+      <div><h1>Genética <span>2026</span></h1>
+      <small data-t="subtitle"></small></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="explore" data-t="tabProgram"></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="plan"><span data-t="tabPlan"></span> <span class="count" id="cnt">0</span></button>
+    </nav>
+    <button class="langbtn" id="lang" aria-label="Idioma / Language"><span data-l="pt">PT</span><span data-l="en">EN</span></button>
+    <button class="theme" id="theme" aria-label="Light / dark">
+      <svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+      <svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="explore">
+    <div class="sechead"><h2>Programação <span>2026</span></h2><p id="explore-sub"></p></div>
+    <details class="help" id="help"><summary data-t="helpTitle"></summary><ol><li data-t="help1"></li><li data-t="help2"></li><li data-t="help3"></li><li data-t="help4"></li></ol></details>
+    <div class="toolbar">
+      <label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" autocomplete="off"></label>
+      <select id="f-track"></select>
+      <select id="f-type"></select>
+      <select id="f-room"></select>
+      <label class="chk"><input type="checkbox" id="f-pt"> <span data-t="hidePt"></span></label>
+      <label class="chk"><input type="checkbox" id="f-mine"> <span data-t="mineOnly"></span></label>
+      <button class="linkbtn" id="f-clear" hidden data-t="clear"></button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="days" id="days" role="tablist"></div>
+    <div id="blocks"></div>
+  </section>
+
+  <section id="plan" hidden>
+    <div class="sechead"><h2 id="plan-h"></h2><p data-t="planSub"></p></div>
+    <div id="friendbar"></div>
+    <div class="sumbar" id="sumbar"></div>
+    <div class="exportopts">
+      <label class="chk"><input type="checkbox" id="x-maybe" checked> <span data-t="incMaybe"></span></label>
+      <label><span data-t="reminder"></span> <select id="x-alarm"></select></label>
+    </div>
+    <div id="copyarea" hidden class="panel"><h3 data-t="calText"></h3><p class="note" data-t="calTextHelp"></p><textarea class="copybox" id="copybox" readonly></textarea></div>
+    <div id="conflicts"></div>
+    <div id="hops"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;gap:10px;flex-wrap:wrap">
+      <div class="viewtog"><button id="v-cal" aria-pressed="true" data-t="vCal"></button><button id="v-list" aria-pressed="false" data-t="vList"></button></div>
+      <small class="note" data-t="calLegend"></small>
+    </div>
+    <div id="calview"></div>
+    <div class="panel" style="margin-top:18px">
+      <h3 data-t="shareTitle"></h3>
+      <div class="share">
+        <div class="col">
+          <p class="note" data-t="shareMine"></p>
+          <div class="codebox"><input id="mycode" readonly aria-label="Code"><button class="btn" id="copycode" data-t="copy"></button></div>
+        </div>
+        <div class="col">
+          <p class="note" data-t="shareFriend"></p>
+          <div class="codebox"><input id="fname" maxlength="30" autocomplete="off"></div>
+          <div class="codebox"><input id="fcode" autocomplete="off" spellcheck="false"><button class="btn primary" id="compare" data-t="compare"></button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot"><div class="wrap"><p data-t="disclaimer"></p><p data-t="privacy"></p></div></footer>
+
+<dialog id="dlg" aria-labelledby="dlg-title"><div class="dlg" id="dlg-inner"></div></dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const DATA = {"dates":["2026-09-29","2026-09-30","2026-10-01","2026-10-02"],"sessions":[{"day":0,"start":570,"end":750,"id":"d1b1c0","type":"Mini course","title":"Genômica aplicada à descoberta de novos genes de resistência a antifúngicos","series":"","room":"Sambaqui 1","area":"BIOINFORMÁTICA APLICADA ÀS ÔMICAS","code":"B.A.Ô.","note":"","people":[{"role":"Instructor","name":"Heryk Motta de Souza","aff":"UFRGS","talk":""},{"role":"Instructor","name":"Alexandra Rocha","aff":"UFRGS, Porto Alegre, RS","talk":""}],"tracks":["bioinfo"],"pt":true},{"day":0,"start":570,"end":750,"id":"d1b1c1","type":"Mini course","title":"Uso do Cytoscape para o ensino de conceitos do pensamento de sistemas em ecologia molecular de insetos e microrganismos","series":"","room":"Arvoredo 2","area":"GENÉTICA DE MICRORGANISMOS / PESQUISA EM ENSINO DE GENÉTICA / INTERDISCIPLINAR","code":"G.M. / P.E.G. / I.","note":"","people":[{"role":"Instructor","name":"Renato Augusto Corrêa dos Santos","aff":"UNICAMP","talk":""}],"tracks":["micro","edu","inter"],"pt":true},{"day":0,"start":570,"end":750,"id":"d1b1c2","type":"Mini course","title":"Genética Forense e análise de manchas de sangue em local de crime","series":"","room":"Joaquina","area":"GENÉTICA HUMANA, MÉDICA E FARMACOGENÉTICA","code":"G.H. / M.F.","note":"","people":[{"role":"Instructor","name":"Pablo Abdon da Costa Frances","aff":"Perito criminal Amapá","talk":""},{"role":"Speaker","name":"Luiz Walter Carvalho de Souza","aff":"CESUPA","talk":""}],"tracks":["human"],"pt":true},{"day":0,"start":570,"end":750,"id":"d1b1c3","type":"Mini course","title":"Do campo ao dado: prática em DNA ambiental (eDNA) para conservação da biodiversidade","series":"","room":"Armação","area":"GENÉTICA EVOLUTIVA","code":"G.E.","note":"","people":[{"role":"Instructor","name":"Izabela Santos Mendes","aff":"MetaGen Soluções Moleculares","talk":""}],"tracks":["evo"],"pt":true},{"day":0,"start":570,"end":750,"id":"d1b1c4","type":"Mini course","title":"Biomarcadores de Genotoxicidade: Ensaio do Cometa e Micronúcleos","series":"","room":"Ribeirão","area":"MUTAGÊNESE, CITO E GENOTOXICIDADE","code":"M. / C.G.","note":"","people":[{"role":"Speaker","name":"Malu Siqueira Borges","aff":"UFRGS","talk":""}],"tracks":["muta"],"pt":true},{"day":0,"start":840,"end":1020,"id":"d1b3","type":"Meeting","title":"25th Editorial Board Meeting of GMB","series":"","room":"Ribeirão","area":"","code":"","note":"","people":[],"tracks":[],"pt":false},{"day":0,"start":870,"end":1050,"id":"d1b4c0","type":"Mini course","title":"Bioquímica Evolutiva aplicada ao estudo de mutações","series":"","room":"Sambaqui 1","area":"GENÉTICA EVOLUTIVA, BIOINFORMÁTICA APLICADA ÀS ÔMICAS, INTERDISCIPLINAR","code":"G.E. / B.A.Ô. / I.","note":"","people":[{"role":"Instructor","name":"Lucas Bleicher","aff":"UFMG","talk":""}],"tracks":["evo","bioinfo","inter"],"pt":true},{"day":0,"start":870,"end":1050,"id":"d1b4c1","type":"Mini course","title":"Aconselhamento genético","series":"","room":"Arvoredo 2","area":"GENÉTICA HUMANA, MÉDICA E FARMACOGENÉTICA","code":"G.H. / M.F.","note":"","people":[{"role":"Instructor","name":"Elisângela de Paula Silveira Lacerda","aff":"UFG","talk":""}],"tracks":["human"],"pt":true},{"day":0,"start":870,"end":1050,"id":"d1b4c2","type":"Mini course","title":"Citogenômica para diversidade poliploide e melhoramento genético","series":"","room":"Joaquina","area":"GENÉTICA E MELHORAMENTO VEGETAL","code":"G.M.V.","note":"","people":[{"role":"Instructor","name":"Nina Soares","aff":"ESALQ/USP, Piracicaba, SP","talk":""}],"tracks":["plant"],"pt":true},{"day":0,"start":870,"end":1050,"id":"d1b4c3","type":"Mini course","title":"Estratégias de Genética Forense além do banco de perfis genéticos","series":"","room":"Armação","area":"GENÉTICA FORENSE","code":"G.F.","note":"","people":[{"role":"Instructor","name":"Silviene Fabiana de Oliveira","aff":"UnB, Brasília - DF","talk":""},{"role":"Instructor","name":"Cintia Fridman Rave","aff":"USP, São Paulo, SP","talk":""}],"tracks":["forensic"],"pt":true},{"day":0,"start":1110,"end":1230,"id":"d1b5","type":"Ceremony","title":"Opening Ceremony","series":"","room":"Main hall","area":"","code":"","note":"","people":[],"tracks":[],"pt":false},{"day":0,"start":1230,"end":1280,"id":"d1b6","type":"Plenary","title":"Network analyses of genomic data with applications to human evolution and genetic epidemiology","series":"Opening plenary","room":"Main hall","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Alan R. Templeton","aff":"","talk":"Network analyses of genomic data with applications to human evolution and genetic epidemiology"},{"role":"Chair","name":"Reinaldo Alves de Brito","aff":"","talk":""}],"tracks":[],"pt":false},{"day":1,"start":540,"end":600,"id":"d2b0c0","type":"Plenary","title":"Genomic and structural approaches for the identification of broad-spectrum bacteriocins with potent antimicrobial activity","series":"","room":"Sambaqui 5","area":"MICROBIAL GENETICS","code":"M.G.","note":"","people":[{"role":"Speaker","name":"David Negus","aff":"Nottingham Trent University, Nottingham, UK","talk":""},{"role":"Chair","name":"Juliana Alves Parente Rocha","aff":"UFG, Goiânia, GO","talk":""}],"tracks":["micro"],"pt":false},{"day":1,"start":540,"end":600,"id":"d2b0c1","type":"Plenary","title":"From pathogen diversity and virulence to genetic resistance: strategies for Asian soybean rust control","series":"","room":"Arvoredo 6","area":"PLANT GENETICS AND BREEDING","code":"P.G.B.","note":"","people":[{"role":"Speaker","name":"Francismar Correa Marcelino Guimaraes","aff":"Embrapa Soja, Londrina, PR","talk":""},{"role":"Chair","name":"Lyderson Facio Viccini","aff":"UFJF, Juiz de Fora, MG","talk":""}],"tracks":["plant"],"pt":false},{"day":1,"start":540,"end":600,"id":"d2b0c2","type":"Plenary","title":"Conserved and derived mechanisms of fin and limb regeneration","series":"","room":"Sambaqui 3","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Speaker","name":"Igor Schneider","aff":"Louisiana State University, Baton Rouge, LA","talk":""},{"role":"Chair","name":"Tiana Kohlsdorf","aff":"FFCLRP/USP, Ribeirão Preto, SP","talk":""}],"tracks":["evo"],"pt":false},{"day":1,"start":540,"end":600,"id":"d2b0c3","type":"Plenary","title":"Origin and evolution of drosophila Y chromosomes","series":"","room":"Arvoredo 4","area":"ANIMAL GENETICS AND BREEDING","code":"A.G.B.","note":"","people":[{"role":"Speaker","name":"Antonio Bernardo de Carvalho","aff":"UFRJ, Rio de Janeiros, RJ","talk":""},{"role":"Chair","name":"Maura Helena Manfrin","aff":"FFCLRP/USP, Ribeirão Preto, SP","talk":""}],"tracks":["animal"],"pt":false},{"day":1,"start":540,"end":600,"id":"d2b0c4","type":"Plenary","title":"Evolutionary history of humans and other primates: new data, new approaches, and illustrative examples","series":"","room":"Sambaqui 1","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Maria Cátira Bortolini","aff":"UFRGS, Porto Alegre, RS","talk":""},{"role":"Chair","name":"Ândrea Ribeiro dos Santos","aff":"UFPA, Belém, PA","talk":""}],"tracks":["evo","human"],"pt":false},{"day":1,"start":540,"end":600,"id":"d2b0c5","type":"Plenary","title":"Integrative systems analysis of molecular signatures in health and disease","series":"","room":"Arvoredo 2","area":"BIOINFORMATICS","code":"B.","note":"","people":[{"role":"Speaker","name":"Otávio Cabral Marques","aff":"FCF/USP, São Paulo, SP","talk":""},{"role":"Chair","name":"Rodrigo Juliani Siqueira Dalmolin","aff":"UFRN, Natal, RN","talk":""}],"tracks":["bioinfo"],"pt":false},{"day":1,"start":540,"end":600,"id":"d2b1c0","type":"Forensic Genetics Symposium","title":"From degraded genomes to community-governed reference databases: expanding human identification through genomics and ethical partnership","series":"4th Brazilian Symposium of Forensic Genetics","room":"Jurerê","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Meradeth Snow","aff":"Universidade de Montana, Missoula, Montana, USA","talk":""},{"role":"Chair","name":"Rodrigo Moura-Neto","aff":"UFRJ, Rio de Janeiro, RJ","talk":""}],"tracks":["forensic"],"pt":false},{"day":1,"start":540,"end":600,"id":"d2b2c0","type":"REGEM","title":"Development of azole resistance in Aspergillus fumigatus","series":"35th REGEM · Microorganism Genetics Meeting — Molecular and cell biology of microorganisms","room":"Joaquina","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Nir Osherov","aff":"Tel Aviv University, Tel Aviv-Yafo, Israel","talk":""},{"role":"Chair","name":"Alexandre Melo Bailão","aff":"UFG, Goiânia - GO","talk":""}],"tracks":["micro"],"pt":false},{"day":1,"start":630,"end":720,"id":"d2b4c0","type":"Panel","title":"Discussing the Role of Scientific Societies","series":"","room":"Sambaqui 5","area":"PANEL","code":"P.","note":"in Portuguese language only","people":[{"role":"Chair","name":"José Baldin Pinheiro","aff":"ESALQ/USP, Piracicaba, SP","talk":""},{"role":"Speaker","name":"Lyderson Facio Viccini","aff":"UFJF, Juiz de Fora, MG","talk":"SBG - Sociedade Brasileira de Genética"},{"role":"Speaker","name":"Savio Torres de Farias","aff":"UFPB, João Pessoa, PB","talk":"SBBE - Sociedade Brasileira de Biologia Evolutiva"},{"role":"Speaker","name":"Nara Oliveira Silva Souza","aff":"UnB, Brasília, DF","talk":"SBMP - Sociedade Brasileira de Melhoramento de Plantas"},{"role":"Speaker","name":"Marcelo Mendes Brandão","aff":"Unicamp, Campinas, SP","talk":"AB3C - Associação Brasileira de Bioinformática e Biologia Computacional"},{"role":"Speaker","name":"Mariana Pires de Campos Telles","aff":"UFG e da PUC/Goiás, Goiânia, GO","talk":"SBRG - Sociedade Brasileira de Recursos Genéticos"}],"tracks":["society"],"pt":true},{"day":1,"start":630,"end":720,"id":"d2b4c1","type":"Symposium","title":"Plant genetics under stress","series":"","room":"Arvoredo 6","area":"PLANT GENETICS AND BREEDING","code":"P.G.B.","note":"","people":[{"role":"Chair","name":"Adriano Nunes Nesi","aff":"UFV, Viçosa, MG","talk":""},{"role":"Speaker","name":"Agustin Zsögön","aff":"UFV","talk":"De novo domestication for crop improvement"},{"role":"Speaker","name":"Danilo M. Daloso","aff":"UFC, Fortaleza, CE","talk":"The spatial landscape of plant metabolic responses to stress"},{"role":"Speaker","name":"Elina Welchen","aff":"Universidad Nacional del Litoral, Santa Fe, Argentina","talk":"On the role of plant mitochondria OXRS proteins"}],"tracks":["plant"],"pt":false},{"day":1,"start":630,"end":720,"id":"d2b4c2","type":"Symposium","title":"Comparative genomics of biodiversity: exploring frontiers beyond conservation","series":"","room":"Sambaqui 3","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Chair","name":"Marcela Uliano da Silva","aff":"Wellcome Sanger Institute, Hinxton, Cambridgeshire, UK","talk":""},{"role":"Speaker","name":"Marcela Uliano da Silva","aff":"Wellcome Sanger Institute, Hinxton, Cambridgeshire, UK","talk":"The Darwin tree of life and earth biogenome projects"},{"role":"Speaker","name":"Pedro Alexandre Favoretto Galante","aff":"Hospital Sírio-Libanês, São Paulo, SP","talk":"Pseudogenes and retrogenes in vertebrate genomes: insights from the vertebrate genomes project"},{"role":"Speaker","name":"Renato Renison Moreira Oliveira","aff":"ITV","talk":"GBB: The genomics of brazilian biodiversity consortium"}],"tracks":["evo"],"pt":false},{"day":1,"start":630,"end":720,"id":"d2b4c3","type":"Symposium","title":"Genomics of adaptation and speciation","series":"","room":"Arvoredo 4","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Chair","name":"Sandro Luis Bonatto","aff":"PUCRS, Porto Alegre, RS","talk":""},{"role":"Speaker","name":"Sandro Luis Bonatto","aff":"PUCRS, Porto Alegre, RS","talk":"Speciation without barriers: genomic evidence for the origin and adaptation of a costal dolphin species"},{"role":"Speaker","name":"Frederico Henning","aff":"UFRJ, Rio de Janeiro, RJ","talk":"Ecological pangenomics of adaptive radiation in Neotropical cichlid fishes (Crenicichla)"},{"role":"Speaker","name":"Alexandre Aleixo","aff":"ITV","talk":"Genomic architecture of speciation in an Amazonian avian lineage"}],"tracks":["evo"],"pt":false},{"day":1,"start":630,"end":720,"id":"d2b4c4","type":"Symposium","title":"The FMR1 gene: functional and regulatory dissection leading to potential therapeutics for fragile X syndrome","series":"","room":"Sambaqui 1","area":"HUMAN AND MEDICAL GENETICS","code":"H.M.G.","note":"","people":[{"role":"Chair","name":"Luciana Amaral Haddad","aff":"USP, São Paulo, SP","talk":""},{"role":"Speaker","name":"Luciana Amaral Haddad","aff":"USP, São Paulo, SP","talk":"Regulation of FMR1 mRNA steady state by alternative splicing"},{"role":"Speaker","name":"Barbara Bardoni","aff":"Institute of Molecular and Cellular Pharmacology, Université Côte D'Azur, Valbonne, France","talk":"From FMRP loss to clinical translation: Advances and challenges in Fragile X therapeutic development"}],"tracks":["human"],"pt":false},{"day":1,"start":630,"end":720,"id":"d2b4c5","type":"Symposium","title":"Consequences of sunlight-induced DNA damage","series":"","room":"Arvoredo 2","area":"MUTAGENESIS, CYTOTOXICITY, AND GENOTOXICITY","code":"M. / C. / G.","note":"","people":[{"role":"Chair","name":"Carlos Frederico Martins Menck","aff":"IB/USP","talk":""},{"role":"Speaker","name":"Glaucia Regina Martinez","aff":"UFPR, Curitiba, PR","talk":"Implications of melanin content in Rose Bengal-PDT and other treatments in melanoma cells"},{"role":"Speaker","name":"André Passaglia Schuch","aff":"UFSM","talk":"Trends in UV radiation and stratospheric ozone in South America and its genotoxic effects"},{"role":"Speaker","name":"Masaoki Kawasumi","aff":"The Ohio State University","talk":"Caffeine reduces the frequency of UV-induced CDKN2a promoter mutations and suppresses skin cancer development"}],"tracks":["muta"],"pt":false},{"day":1,"start":630,"end":720,"id":"d2b5c0","type":"Forensic Genetics Symposium","title":"Application of new technologies","series":"4th Brazilian Symposium of Forensic Genetics","room":"Jurerê","area":"","code":"","note":"","people":[{"role":"Chair","name":"Clarice Sampaio Alho","aff":"UFCSPA, INCT-FORENSE, Porto Alegre, RS","talk":""},{"role":"Speaker","name":"Celso Teixeira Mendes Júnior","aff":"FFCLRP/USP, Ribeirão Preto, SP","talk":"Hair Trace: genetic systems for hair color prediction developed from admixed Brazilians"},{"role":"Speaker","name":"Eduardo Filipe Avila Silva","aff":"UFRGS, Porto Alegre, RS","talk":"Predictive tools for polygenic traits of forensic interest"},{"role":"Speaker","name":"Carina de Oliveira Dumont Horta","aff":"Polícia Civil, Belo Horizonte, MG","talk":"Mitogenome in monozygotic twins"},{"role":"Speaker","name":"Isabella Poleto","aff":"Interprise Brasil","talk":"Advances in forensic genetics: exploring the potential of long-read sequencing"}],"tracks":["forensic"],"pt":false},{"day":1,"start":630,"end":720,"id":"d2b6c0","type":"REGEM","title":"Molecular and cell biology of microorganisms","series":"35th REGEM · Microorganism Genetics Meeting","room":"Joaquina","area":"","code":"","note":"","people":[{"role":"Chair","name":"Clayton Luiz Borges","aff":"Universidade Federal de Goiás, Goiânia, GO","talk":""},{"role":"Speaker","name":"Frederico José Gueiros Filho","aff":"IQ/USP, São Paulo, SP","talk":"Exploiting bacterial signalling as a target for antimicrobial therapy"},{"role":"Speaker","name":"Livia Soares Zaramela","aff":"FMRP/USP, Ribeirão Preto, SP","talk":"The role of carbohydrates in shaping microbial communities' composition"},{"role":"Speaker","name":"Angela Kaysel Cruz","aff":"FMRP/USP, Ribeirão Preto, SP","talk":"Expanding the landscape of regulatory noncoding RNAs in Leishmania"}],"tracks":["micro"],"pt":false},{"day":1,"start":780,"end":840,"id":"d2b8c0","type":"Technical talk","title":"Os avanços da inteligência artificial na citogenética - do cariotipo ao fish","series":"Technical conference · Phase Tech e Inopat","room":"Arvoredo 4","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Manoel Flavio Cavalcante","aff":"PHASE TECH E INOPAT","talk":""}],"tracks":["industry"],"pt":false},{"day":1,"start":780,"end":840,"id":"d2b8c1","type":"Technical talk","title":"Multiômicas na era da genômica funcional: tecnologias, aplicações e oportunidades","series":"Technical conference · GENCELL - Genética Avançada","room":"Sambaqui 1","area":"","code":"G.-G.A.","note":"","people":[{"role":"Speaker","name":"Rodrigo Pinheiro Araldi","aff":"Gencell","talk":""},{"role":"Chair","name":"Tassia Turini","aff":"Gencell","talk":""}],"tracks":["industry"],"pt":false},{"day":1,"start":840,"end":1140,"id":"d2b9c0","type":"Outreach workshop","title":"GeneQuest 2100: A IA que decifra o genoma","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"Oficina que transforma a teoria do gene em prática de genômica. Frente a uma sequência de DNA fornecida, um painel, rodando ao vivo, atua como o bioinformata da equipe fornecendo informações sobre o tipo de mutação, previsão dos efeitos na proteína e hipótese de fenótipo. Os participantes devem justificar as previsões da IA.","people":[{"role":"Speaker","name":"Edimar Olegário de Campos Júnior","aff":"Universidade do Estado de Minas Gerais, UEMG.","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c1","type":"Outreach workshop","title":"Memórias do gene: Epigenética em Jogo","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"Simulação narrativa que coloca cada estudante no papel de um \"gene\" dentro de um tabuleiro que representa o núcleo; em cada ciclo, uma carta ambiente coletiva (sono, dieta, estresse, poluição, atividade física) libera um número limitado de fichas de acetilação (LIGA) e metilação (DESLIGA), permitindo a modulação da expressão gênica.","people":[{"role":"Speaker","name":"Edimar Olegário de Campos Júnior","aff":"Universidade do Estado de Minas Gerais, UEMG.","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c2","type":"Outreach workshop","title":"DNA das heroínas","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"Oficina idealizada por um projeto de extensão universitária que tem por objetivo valorizar e dar visibilidade ao papel das mulheres na ciência, combatendo estereótipos de gênero e incentivando ativamente a participação feminina nas áreas STEM (Ciência, Tecnologia, Engenharia e Matemática).","people":[{"role":"Speaker","name":"Regina Célia Pereira Marques","aff":"Universidade do Estado do Rio Grande do Norte","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c3","type":"Outreach workshop","title":"Mitose ao alcance das mãos: Observando o ciclo celular em raízes de cebola","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"Oficina voltada para estudantes dos ensinos fundamental e médio que possibilita a visualização dos cromossomos de cebola durante as diferentes fases da mitose em células meristemáticas de raízes.","people":[{"role":"Speaker","name":"Maria Eliza Soares Queiroz","aff":"Universidade Federal do Espírito Santo","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c4","type":"Outreach workshop","title":"Desvendando o câncer infantojuvenil","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"A oficina apresenta de forma prática e acessível aspectos relacionados ao câncer na população pediátrica, com foco na conscientização para a detecção precoce e na disseminação do conhecimento científico sobre as bases genéticas do desenvolvimento de câncer.","people":[{"role":"Speaker","name":"Talita Helen Bombardelli Gomig","aff":"Universidade Federal do Paraná","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c5","type":"Outreach workshop","title":"Decifrando a leucemia: Um guia para crianças e suas famílias","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"Abordagem integrada de comunicação em saúde, focada no suporte a famílias que enfrentam o diagnóstico de leucemia infantil.","people":[{"role":"Speaker","name":"Ana Júlia Vidal de Araújo","aff":"Universidade Federal de São Paulo","talk":""},{"role":"Speaker","name":"Bianca Alves Oliveira","aff":"Universidade Federal de São Paulo","talk":""},{"role":"Speaker","name":"Enzo Carvalho Plestenjak","aff":"Universidade Federal de São Paulo","talk":""},{"role":"Speaker","name":"Gabriella Santos Cavalcante","aff":"Universidade Federal de São Paulo","talk":""},{"role":"Speaker","name":"Geovanna Karolinne Silva Sales","aff":"Universidade Federal de São Paulo","talk":""},{"role":"Speaker","name":"Letícia Barros Barboza","aff":"Universidade Federal de São Paulo","talk":""},{"role":"Speaker","name":"Luisa Tavares Pena","aff":"Universidade Federal de São Paulo","talk":""},{"role":"Speaker","name":"Maria Clara Ribeiro de Oliveira","aff":"Universidade Federal de São Paulo","talk":""},{"role":"Speaker","name":"Thaissa Gabriele de Sousa Oliveira","aff":"Universidade Federal de São Paulo","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c6","type":"Outreach workshop","title":"O clima mudou! E a evolução das espécies? Uma simulação de genética de populações","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"Esta atividade apresenta um material interativo voltado para a compreensão de conceitos fundamentais da genética de populações, demonstrando como eventos ambientais podem modificar a composição genética de um grupo ao longo do tempo.","people":[{"role":"Speaker","name":"David Duarte França","aff":"Universidade de Brasília","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c7","type":"Outreach workshop","title":"GeneCraft: Construindo o DNA","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"O ensino de genética envolve conceitos abstratos que podem ser de difícil compreensão quando apresentados apenas por metodologias expositivas. O jogo propõe uma abordagem lúdica e interativa para ensinar, de forma prática, os processos fundamentais da genética, utilizando estratégias de gamificação que favorecem o aprendizado, o engajamento e a retenção do conhecimento.","people":[{"role":"Speaker","name":"Victor Alexandre Félix Bastos","aff":"Universidade Federal de Uberlândia","talk":""},{"role":"Speaker","name":"Aline Gomes de Souza","aff":"Universidade Federal de Uberlândia","talk":""},{"role":"Speaker","name":"Luanna Cardoso Silva","aff":"Universidade Federal de Uberlândia","talk":""},{"role":"Speaker","name":"Amanda Luiza Rodrigues De Oliveira","aff":"Universidade Federal de Uberlândia","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c8","type":"Outreach workshop","title":"Mosquinhas na praça: Herança e variabilidade genética com drosófilas","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"Em estações independentes, os participantes podem observar drosófilas (com auxílio de lupas), conhecer seu ciclo de vida e características externas e simular cruzamentos monogênicos com cartões de alelos. A oficina aborda os conceitos de DNA, gene, alelo, hereditariedade, mutação e variabilidade genética.","people":[{"role":"Speaker","name":"Fernanda Freitas de Oliveira","aff":"Universidade Federal do Paraná","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":1140,"id":"d2b9c9","type":"Outreach workshop","title":"A seleção natural em ação: o caso das joaninhas","series":"Genética na Praça","room":"Praça","area":"","code":"","note":"A atividade trabalha conceitos básicos de genética e evolução, e mostra, de forma lúdica e visual os efeitos que mudanças ambientais podem causar nas frequências alélica e fenotípica de uma população.","people":[{"role":"Speaker","name":"Lyria Mori","aff":"Departamento de Genética e Biologia Evolutiva, IBUSP, São Paulo","talk":""},{"role":"Speaker","name":"Cristina Yumi Miyaki","aff":"Departamento de Genética e Biologia Evolutiva, IBUSP, São Paulo","talk":""},{"role":"Speaker","name":"Maria Cristina Arias","aff":"Departamento de Genética e Biologia Evolutiva, IBUSP, São Paulo","talk":""}],"tracks":["edu"],"pt":true},{"day":1,"start":840,"end":930,"id":"d2b10c0","type":"Symposium","title":"Genetic arsenal of environmental microorganisms and their biotechnological potential","series":"","room":"Sambaqui 5","area":"MICROBIAL GENETICS","code":"M.G.","note":"","people":[{"role":"Chair","name":"Marinella Silva Laport","aff":"UFRJ","talk":""},{"role":"Speaker","name":"Ciro César Rossi","aff":"UFF, Niterói, RJ","talk":"Bioprospecting environmental phages: Nature's genetic toolkit against drug-resistant pathogens"},{"role":"Speaker","name":"Bruno Francesco Rodrigues de Oliveira","aff":"UFF","talk":"Unveiling the mysteries in seaweed-bacteria symbiosis: From diversity to biotechnology"},{"role":"Speaker","name":"Anna Luiza Bauer Canellas","aff":"UFRJ","talk":"Biotechnology and marine biodiversity: Innovative and sustainable perspectives"}],"tracks":["micro"],"pt":false},{"day":1,"start":840,"end":930,"id":"d2b10c1","type":"Symposium","title":"From genes and molecules to field: Strategies to mitigate biotic stress in plants","series":"","room":"Arvoredo 6","area":"PLANT GENETICS AND BREEDING","code":"P.G.B.","note":"","people":[{"role":"Chair","name":"Francismar Correa Marcelino Guimaraes","aff":"Embrapa Soja, Londrina, PR","talk":""},{"role":"Speaker","name":"Marcio Alves Ferreira","aff":"UFRJ","talk":"Decoding cotton's early defense through transcriptional reprogramming and promoter signatures under boll weevil attack"},{"role":"Speaker","name":"Valdeir Junio Vaz Moreira","aff":"Embrapa Cenargen, Brasília, DF","talk":"Targeting nematode effectors with methylation-escaping dsRNA: a novel biotechnological platform for soybean protection"},{"role":"Speaker","name":"Caroline de Barros Montebianco","aff":"UFRJ e TolVeg, Rio de Janeiro, RJ","talk":"Microbial elicitors to enhance plant resilience: From discovery to field applications"}],"tracks":["plant"],"pt":false},{"day":1,"start":840,"end":930,"id":"d2b10c2","type":"Symposium","title":"Types of genomic data and current analytical methods to characterize and conserve biodiversity","series":"","room":"Sambaqui 3","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Chair","name":"Eduardo Eizirik","aff":"PUCRS, Porto Alegre, RS","talk":""},{"role":"Speaker","name":"Larissa Souza Arantes","aff":"UFMG, Belo Horizonte, MG","talk":"How much genomic depth of coverage is needed to address relevant questions in biodiversity conservation?"},{"role":"Speaker","name":"Fernanda de Jesus Trindade","aff":"ESALQ/USP, Piracicaba, SP","talk":"From complete genomes to reduced libraries: Advantages and limitations for the study of biodiversity"},{"role":"Speaker","name":"Joyce Rodrigues do Prado","aff":"USP, São Paulo, SP","talk":"Museomics: Genomic sequencing from museum samples"}],"tracks":["evo"],"pt":false},{"day":1,"start":840,"end":930,"id":"d2b10c3","type":"Symposium","title":"Advances in conservation genomics","series":"","room":"Arvoredo 4","area":"ANIMAL GENETICS AND BREEDING","code":"A.G.B.","note":"","people":[{"role":"Chair","name":"Fabrício Rodrigues dos Santos","aff":"UFMG","talk":""},{"role":"Speaker","name":"Camila Mazzoni","aff":"Leibniz Institute for Zoo and Wildlife Research, Berlim, Germany","talk":"Reference genomes of endangered neotropical species: Conservation implications"},{"role":"Speaker","name":"Mariana Freitas Nery","aff":"Unicamp","talk":"Genomics of Cetaceans: Evolutionary adaptations and conservation implications"},{"role":"Speaker","name":"Diego Nicolas De Panis","aff":"BeGenDiv, Berlim, Germany","talk":"A community-driven framework for scalable biodiversity genomics"}],"tracks":["animal"],"pt":false},{"day":1,"start":840,"end":930,"id":"d2b10c4","type":"Symposium","title":"Pharmacogenetics and precision health in Brazil","series":"","room":"Sambaqui 1","area":"HUMAN AND MEDICAL GENETICS","code":"H.M.G.","note":"","people":[{"role":"Chair","name":"Elisângela de Paula Silveira Lacerda","aff":"UFG","talk":""},{"role":"Speaker","name":"Júlia Pasqualini Genro","aff":"UFCSPA, Porto Alegre, RS","talk":"Challenges and prospects for pharmacogenetics in Brazil"},{"role":"Speaker","name":"Raíssa Nunes dos Santos","aff":"UFCSPA, Porto Alegre, RS","talk":"Next-generation sequencing to understand pharmacogenes in the Brazilian population"},{"role":"Speaker","name":"Fernanda Rodrigues Soares","aff":"UFTM","talk":"Pharmacogenetics and genomic ancestry in admixed populations"},{"role":"Speaker","name":"José Cláudio Casali da Rocha","aff":"A.C.Camargo Cancer Center, São Paulo, SP","talk":"Integrating genetic results into oncological care: From management to therapeutic impact"}],"tracks":["human"],"pt":false},{"day":1,"start":840,"end":930,"id":"d2b10c5","type":"Symposium","title":"Advancements and challenges in aging, neurodegeneration and cancer","series":"","room":"Arvoredo 2","area":"HUMAN AND MEDICAL GENETICS","code":"H.M.G.","note":"","people":[{"role":"Chair","name":"Elza Tiemi Sakamoto Hojo","aff":"FFCLRP/USP, Ribeirão Preto, SP","talk":""},{"role":"Speaker","name":"Natalia Chermont dos Santos Moreira","aff":"University of California San Diego, La Jolla, CA, USA","talk":"Space environment-induced neural aging in human brain organoids: Modeling Alzheimer's disease and neurodegeneration"},{"role":"Speaker","name":"Clarissa Ribeiro Reily Rocha","aff":"UNIFESP, São Paulo, SP","talk":"Targeting therapy resistance: The emerging role of ferroptosis in cancer"},{"role":"Speaker","name":"Elza Tiemi Sakamoto Hojo","aff":"FFCLRP/USP, Ribeirão Preto, SP","talk":"Mechanisms of responses to neurotoxic compounds in human neural models derived from induced-pluripotent stem cells: Relevance for aging and neurodegeneration"}],"tracks":["human"],"pt":false},{"day":1,"start":840,"end":930,"id":"d2b11c0","type":"Forensic Genetics Symposium","title":"CSI in Real Life","series":"4th Brazilian Symposium of Forensic Genetics","room":"Jurerê","area":"","code":"","note":"","people":[{"role":"Chair","name":"Cintia Fridman Rave","aff":"USP, São Paulo, SP","talk":""},{"role":"Chair","name":"Silviene Fabiana de Oliveira","aff":"UnB, Brasília - DF","talk":""},{"role":"Speaker","name":"Ana Paula Vieira Castro","aff":"Polícia Federal, Brasília, DF","talk":"The massive heist at PROSEGUR in Ciudad del Este, Paraguay (2017)"},{"role":"Speaker","name":"Jonathan Wöhlke","aff":"Polícia Federal, Florianópolis, SC","talk":"The massive heist at PROSEGUR in Ciudad del Este, Paraguay (2017)"},{"role":"Speaker","name":"Ana Claudia Pacheco","aff":"IC Polícia Científica, SP","talk":"Analysis of homicide evidence from the perspective of forensic genetics"},{"role":"Speaker","name":"André Vieira Peixoto D´Ávila","aff":"DHPP Polícia Científica, SP","talk":"Analysis of homicide evidence from the perspective of forensic genetics"}],"tracks":["forensic"],"pt":false},{"day":1,"start":840,"end":930,"id":"d2b12c0","type":"REGEM","title":"Current perspectives in microbial biotechnology: from production of bioactive compounds to pathogen control","series":"35th REGEM · Microorganism Genetics Meeting","room":"Joaquina","area":"","code":"","note":"","people":[{"role":"Chair","name":"Isabelle Freire Tabosa Viana","aff":"Universidade Federal de Pernambuco, Recife, PE","talk":""},{"role":"Speaker","name":"André Ricardo de Lima Damásio","aff":"UNICAMP, Campinas, SP","talk":"Metabolic engineering of fungal cell factories for recombinant proteins/enzymes production"},{"role":"Speaker","name":"Roberto Dias Lins Neto","aff":"Fiocruz, Recife, PE","talk":"Designing proteins for diagnostic and therapy of viral infections"},{"role":"Speaker","name":"Edileusa Gerhardt","aff":"RFPR, Curitiba, PR","talk":"PII signaling and nitrogen fixation control: from molecular mechanisms to biofertilizer innovation"}],"tracks":["micro"],"pt":false},{"day":1,"start":840,"end":930,"id":"d2b13","type":"Award session","title":"Prêmio Jovem Geneticista 2026","series":"Young Geneticist Award finalists","room":"Armação","area":"","code":"","note":"Sponsorship - Sociedade Brasileira de Genética","people":[{"role":"Speaker","name":"Francisco de Menezes Cavalcante Sassi","aff":"UFSCar, São Carlos, SP","talk":"Repeat accumulation and purifying selection shape the rare zw1w2 multiple sex chromosome system in Apareiodon affinis (Characiformes, Parodontidae)"},{"role":"Speaker","name":"Izabela Mamede C. A. Conceição","aff":"UFMG, Belo Horizonte, MG","talk":"Reading the transcriptome at isoform resolution"},{"role":"Speaker","name":"Jéssica Ellen Barbosa de Freitas Lima","aff":"FMRP/USP, Ribeirão Preto, SP","talk":"High glucose sensitizes neuron-like cells to oxidative and neurotoxic insults and highlights DNA damage, impaired DNA repair, and mitochondrial dysfunction as potential links between type 2 diabetes and Alzheimer's disease"},{"role":"Speaker","name":"Josiane Mann","aff":"UFSC, Florianópolis, SC","talk":"ftn-1/ftn-2 double mutation-induced metal storage deficiency drives neuronal loss via lipid peroxidation: pharmacological and nutritional modulation in C. elegans"},{"role":"Speaker","name":"Nayane dos Santos Brito Silva","aff":"UNESP, Botucatu, SP","talk":"Building a multi-ethnic reference panel for accurate hla allele imputation in admixed populations"}],"tracks":[],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b15c0","type":"Oral session","title":"Prêmio Alcides Carvalho · Genética e Melhoramento Vegetal","series":"Oral presentations (award session)","room":"Sambaqui 5","area":"","code":"","note":"Sponsorship - IAC - Instituto Agronômico de Campinas","people":[{"role":"Speaker","name":"Fernanda Roverssi","aff":"Centro de Citricultura Sylvio Moreira/Instituto Agronômico - IAC, Cordeirópolis ? SP","talk":"Identification of genomic regions putatively associated with agronomic traits in citrandarins"},{"role":"Speaker","name":"João Vitor Ferro Mazzei","aff":"Escola Superior de Agricultura Luiz de Queiroz (ESALQ/USP), Piracicaba - SP","talk":"Functional characterization of a candidate effector in the sugarcane-sporisorium scitamineum pathosystem"},{"role":"Speaker","name":"Juliana Tatiara da Costa Siqueira","aff":"Universidade Federal de Juiz de Fora, Juiz de Fora - MG","talk":"Transcriptional reprogramming during the early establishment of synthetic tetraploids in lippia alba"},{"role":"Speaker","name":"Kamylla Rosas Vieira Guedes","aff":"INSTITUTO NACIONAL DE PESQUISAS DA AMAZÔNIA, Manaus - AM","talk":"Genetic characterization of rosewood (aniba rosodora) plantations in the central brazilian amazon"},{"role":"Speaker","name":"Patricio Andres Segundo Delgado Santibañez","aff":"Universidade Federal de Viçosa, Viçosa, MG","talk":"An efficient reverse introgression strategy to study tomato domestication in a wild genetic background"}],"tracks":["plant"],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b15c1","type":"Oral session","title":"Prêmio Crodowaldo Pavan · Mutagênese, Cito e Genotoxicidade","series":"Oral presentations (award session)","room":"Arvoredo 6","area":"","code":"","note":"Sponsorship - MUTAGEN - Associação Brasileira de Mutagênese e Genômica Ambiental","people":[{"role":"Speaker","name":"Allan Luiz Galvão Dickson","aff":"Universidade Federal Do Pará - UFPA, Belém, PA","talk":"Evaluation of dose-dependent effects of Acmella oleracea extract on cell viability, migration, and gene expression: perspectives for safe application in scaffolds"},{"role":"Speaker","name":"Eduarda Pires","aff":"Faculdade De Ciências Farmacêuticas De Ribeirão Preto - USP, Ribeirão Preto, SP","talk":"Combined effects of vescalagin and doxorubicin in resistant triple-negative breast cancer cells"},{"role":"Speaker","name":"Fernanda Camila Albertin Sanches","aff":"FMRP/USP, Ribeirão Preto, SP","talk":"High glucose modulates neural progenitor cell differentiation through the hippo pathway: possible implications for the link between type 2 diabetes and Alzheimer's disease"},{"role":"Speaker","name":"Joe Silva Aguiar","aff":"FMRP/USP, Ribeirão Preto, SP","talk":"Evaluation of the neuroprotective effects of lithium chloride in response to neurotoxic damage induced in sh-sy5y cells"},{"role":"Speaker","name":"Júlia De Oliveira Martinho","aff":"Centro De Pesquisa Em Oncologia Molecular (CPOM) Hospital do Câncer de Barretos, Barretos, SP","talk":"High-throughput profiling of intracellular microRNAs in irradiated head and neck cancer cell lines"}],"tracks":["muta"],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b15c2","type":"Oral session","title":"Prêmio Horácio Schneider · Genética e Melhoramento Animal","series":"Oral presentations (award session)","room":"Sambaqui 3","area":"","code":"","note":"Sponsorship - Profa. Dra. Maria Iracilda da Cunha Sampaio","people":[{"role":"Speaker","name":"Daniel De Lima Cometta","aff":"Universidade Federal De São Carlos (UFSCAR), São Carlos, SP","talk":"Development of a mouse model for mitochondrial disease"},{"role":"Speaker","name":"Fernanda De Angeli Dalarmi","aff":"Universidade De São Paulo (USP), São Paulo, SP","talk":"Developmental and molecular bases of contrasting stingless bees worker ovarian potential in Frieseomelitta varia and Scaptotrigona bipunctata"},{"role":"Speaker","name":"Julia Terra De Souza Torres","aff":"Universidade Estadual Paulista, Botucatu, SP","talk":"Genetic monitoring of marine biodiversity: Using edna metabarcoding to assess coastal island communities in São Paulo"},{"role":"Speaker","name":"Leonardo Machestropa Arikawa","aff":"Faculdade De Ciências Agrárias E Veterinárias - Unesp Jaboticabal, Jaboticabel, SP","talk":"Genome-wide scan to identify selection signatures in Nellore cattle using whole-genome sequencing data"},{"role":"Speaker","name":"Rafaela Marcondes Hasse","aff":"Universidade Estadual De Maringá, Maringá ? PR","talk":"Functional analysis of DM1 and DM2 sbRNAs in Drosophila melanogaster"}],"tracks":["animal"],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b15c3","type":"Oral session","title":"Prêmio Paulo Sodero Martins · Genética Evolutiva","series":"Oral presentations (award session)","room":"Arvoredo 4","area":"","code":"","note":"Sponsorship - Romeu Cardoso Guimarães","people":[{"role":"Speaker","name":"Anna Virginia Albano De Mello","aff":"Universidade Federal De Pernambuco, Recife, PE","talk":"Speciation of forest adapted Anolis lizards is shaped by historical connections between the Amazon and Atlantic rain forests"},{"role":"Speaker","name":"Joana Figueiredo Morais","aff":"Universidade De São Paulo, Ribeirão Preto, SP","talk":"Altered selection regimes and gene expansions underlie an extreme tetrapod bauplan"},{"role":"Speaker","name":"João Victor Da Silva Rabelo Araujo","aff":"Unicamp, Campinas, SP","talk":"Chromosome-scale genomes reveal conserved architecture and functional divergence in Dyckia"},{"role":"Speaker","name":"Maycon Douglas De Oliveira","aff":"Universidade Federal De Minas Gerais, Belo Horizonte, MG","talk":"Interspecific gene flow and hybrid breakdown in South Atlantic sea turtles"},{"role":"Speaker","name":"Naomi Yukie Eto","aff":"Faculdade De Medicina De Ribeirão Preto - USP, Ribeirão Preto, SP","talk":"Persistent species boundaries despite genomic introgression and mitonuclear discordance: insights from a Drosophila (D. repleta group) secondary contact zone"}],"tracks":["evo"],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b15c4","type":"Oral session","title":"Prêmio Milton Krieger · Genética de Microrganismos","series":"Oral presentations (award session)","room":"Sambaqui 1","area":"","code":"","note":"Sponsorship - Sociedade Brasileira de Genética","people":[{"role":"Speaker","name":"Amanda Beatriz Soares Fulan","aff":"Instituto Carlos Chagas - Fiocruz, Curitiba, PR","talk":"Construction and characterization of infectious chimeric genomes of the novel Alphavirus pirahy"},{"role":"Speaker","name":"Iara Aparecida Araújo Macêdo","aff":"UFRGS, Porto Alegre, RS","talk":"KHPB from Marinithermus hydrothermalis binds double-stranded RNA and retains binding activity at high temperatures: the r3h domain as a minimal functional module"},{"role":"Speaker","name":"Izabella Santos Mori Bragil","aff":"Unicamp, Campinas, SP","talk":"Transcriptional regulation of the type vi secretion system in Xanthomonas citri subsp. citri"},{"role":"Speaker","name":"Jaqueline Ferreira Gomes","aff":"UFAM, Manaus, AM","talk":"Biosynthetic gene cluster repertoire of Trichoderma nordicum cpaa-tc66 with antagonistic activity against Agroathelia rolfsii"},{"role":"Speaker","name":"Laura De Sousa Lopes","aff":"Universidade Federal De Goiás, Goiânia, GO","talk":"CRISPR/CAS9-based generation and characterization of nitrogen and iron metabolism mutants in Histoplasma capsulatum"}],"tracks":["micro"],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b15c5","type":"Oral session","title":"Prêmio Newton Freire-Maia · Genética Humana, Médica e Farmacogenética","series":"Oral presentations (award session)","room":"Arvoredo 2","area":"","code":"","note":"Sponsorship - Dra. Eleidi Alice Chautard Freire Maia","people":[{"role":"Speaker","name":"Amanda Girardi Somensi","aff":"UFPR, Curitiba, PR","talk":"High-calory diet alters the expression of obesity-associated genes identified in the genetically isolated mennonite population"},{"role":"Speaker","name":"Larissa de Oliveira Piassi","aff":"Faculdade de Medicina de Ribeirão Preto (FMRP/USP), Ribeirão Preto, SP","talk":"Role of gsk3? on neurogenesis and neuroprotection against neurotoxic agents in human neural cell models"},{"role":"Speaker","name":"Pedro Gamberini Martins","aff":"Universidade Estadual de Campinas, Campinas, SP","talk":"Association between ifnl3 and ifnl4 gene variants and clinical outcome of covid-19"},{"role":"Speaker","name":"Ricardo Nodari Fróes de Castro","aff":"CEFET-MG, Belo Horizonte, MG","talk":"Trophoblast specific activation of adipocytokine signaling pathway in early-onset preeclampsia is revealed by single-cell transcriptomics"},{"role":"Speaker","name":"Viviane Aparecida de Oliveira Ciriaco","aff":"Unesp, Botucatu, SP","talk":"Genetic diversity of nkg2d and its receptor mica reveals independent patterns of variation and a remarkable conservation of klrk1 (nkg2d)"}],"tracks":["human"],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b15c6","type":"Oral session","title":"Prêmio Darcy Fontoura de Almeida · Bioinformática Aplicada às Ômicas","series":"Oral presentations (award session)","room":"Armação","area":"","code":"","note":"Sponsorship - Dra. Suely Spiguel","people":[{"role":"Speaker","name":"Marcelo Santana Filho","aff":"Universidade Federal de Sergipe, Aracaju, SE","talk":"Identification of differentially expressed miRNAs in hypopharynx exosomes with potential to promote angiogenesis"},{"role":"Speaker","name":"Clayton Voidelo Machado","aff":"UFPR, Curitiba, PR","talk":"Exploring SPP1-high macrophages in luminal breast cancer immunosuppression post anti-PD-1 immunotherapy"},{"role":"Speaker","name":"Giuliana do Nascimento Ozores","aff":"ESALQ/USP, Piracicaba, SP","talk":"Shotgun metagenomics reveals ruminal microbiome shifts in feedlot Nellore cattle supplemented with a bromoform-based investigational veterinary product"},{"role":"Speaker","name":"Isabelle Nakaima","aff":"UNESP, São Vicente, SP","talk":"Environmental DNA metabarcoding reveals spatial structuring and environmental drivers of fish assemblages across marine protected areas in southeastern Brazil"},{"role":"Speaker","name":"Maria Bárbara Borges de Santana","aff":"UFRN, Natal, RN","talk":"Pulposeq: A scalable workflow for isoform-level assembly and lncRNA discovery from long-reads"}],"tracks":["bioinfo"],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b16c0","type":"Forensic Genetics Symposium","title":"What is happening in the world?","series":"4th Brazilian Symposium of Forensic Genetics","room":"Jurerê","area":"","code":"","note":"","people":[{"role":"Chair","name":"Andrea Rita Marrero","aff":"UFSC, Florianópolis, SC","talk":""},{"role":"Speaker","name":"Renato Caparroz","aff":"UnB, Brasília, DF","talk":"Wildlife Crime in Brazil: Why is Forensic Genetics still lagging behind?"},{"role":"Speaker","name":"Antônio Matéo Solé-Cava","aff":"UFRJ, Rio de Janeiro, RJ","talk":"Beyond sequencing: Rapid and affordable forensic tools for animal product authentication"}],"tracks":["forensic"],"pt":false},{"day":1,"start":960,"end":1020,"id":"d2b17c0","type":"REGEM","title":"RSV Genomic Surveillance: Linking Molecular Evolution, Transmission, and Disease Expression","series":"35th REGEM · Microorganism Genetics Meeting — Current perspectives in microbial biotechnology: From production of bioactive compounds to pathogen control","room":"Joaquina","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Mariana Viegas","aff":"Universidad Nacional de La Plata/CONICET, La Plata, Argentina","talk":""},{"role":"Chair","name":"Paola Cristina Resende","aff":"Fiocruz, Rio de janeiro RJ","talk":""}],"tracks":["micro"],"pt":false},{"day":1,"start":1020,"end":1140,"id":"d2b18","type":"Poster session","title":"Poster Session","series":"","room":"Poster area","area":"","code":"","note":"","people":[],"tracks":[],"pt":false},{"day":1,"start":1170,"end":1350,"id":"d2b19","type":"Social","title":"Get Together Dinner","series":"","room":"Off-site","area":"","code":"","note":"","people":[],"tracks":[],"pt":false},{"day":2,"start":540,"end":600,"id":"d3b0c0","type":"Plenary","title":"Trypanosoma cruzi Trans-sialidases as a virulent factor that can be targeted for the development of a Chagas disease vaccine","series":"","room":"Sambaqui 5","area":"MICROBIAL GENETICS","code":"M.G.","note":"","people":[{"role":"Speaker","name":"Santuza Maria Ribeiro Teixeira","aff":"UFMG","talk":""},{"role":"Chair","name":"Célia Maria de Almeida Soares","aff":"UFG, Goiânia, GO","talk":""}],"tracks":["micro"],"pt":false},{"day":2,"start":540,"end":600,"id":"d3b0c1","type":"Plenary","title":"Além da seleção: Inovação e evolução nos programas de melhoramento de plantas","series":"","room":"Arvoredo 6","area":"PLANT GENETICS AND BREEDING","code":"P.G.B.","note":"","people":[{"role":"Speaker","name":"Nathalia Salgado","aff":"Bayer do Brasil","talk":""},{"role":"Chair","name":"Lyderson Facio Viccini","aff":"UFJF, Juiz de Fora, MG","talk":""}],"tracks":["plant"],"pt":false},{"day":2,"start":540,"end":600,"id":"d3b0c2","type":"Plenary","title":"Museomics: Biodiversity genomics from museum specimens","series":"","room":"Sambaqui 3","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Speaker","name":"Ricardo J. Pereira","aff":"State Museum of Natural History of Stuttgart, Stuttgart, Germany","talk":""},{"role":"Chair","name":"Fabrício Rodrigues dos Santos","aff":"UFMG","talk":""}],"tracks":["evo"],"pt":false},{"day":2,"start":540,"end":600,"id":"d3b0c3","type":"Plenary","title":"De novo gene evolution: from zero to hero?","series":"","room":"Arvoredo 4","area":"INTERDISCIPLINARY","code":"I.","note":"","people":[{"role":"Speaker","name":"Nikolaos Vakirlis","aff":"G4 Group Leader, Evolutionary Genomics Group, Hellenic Pasteur Institute, Athens, Greece","talk":""},{"role":"Chair","name":"Rodrigo Nunes da Fonseca","aff":"NUPEM-UFRJ, Macaé, RJ","talk":""}],"tracks":["inter"],"pt":false},{"day":2,"start":540,"end":600,"id":"d3b0c4","type":"Plenary","title":"Molecular endotyping in critical illness: From clinical heterogeneity to precision medicine","series":"","room":"Sambaqui 1","area":"HUMAN GENETICS","code":"H.G.","note":"","people":[{"role":"Speaker","name":"Felipe Dal-Pizzol","aff":"Universidade do Extremo Sul Catarinense","talk":""},{"role":"Chair","name":"Rodrigo Juliani Siqueira Dalmolin","aff":"UFRN, Natal, RN","talk":""}],"tracks":["human"],"pt":false},{"day":2,"start":540,"end":600,"id":"d3b0c5","type":"Plenary","title":"Deciphering transcriptome complexity: Isoform diversity from coding and non-coding genes","series":"","room":"Arvoredo 2","area":"BIOINFORMATICS","code":"B.","note":"","people":[{"role":"Speaker","name":"Gloria Regina Franco","aff":"UFMG, Belo Horizonte, MG","talk":""},{"role":"Chair","name":"Ana Maria Benko Iseppon","aff":"UFPE","talk":""}],"tracks":["bioinfo"],"pt":false},{"day":2,"start":540,"end":600,"id":"d3b1c0","type":"REGEM","title":"Bacterial cell walls: From the origins of life to recurrent infection","series":"35th REGEM · Microorganism Genetics Meeting — Cell signaling, regulation and the central dogma","room":"Joaquina","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Jeff Errington","aff":"University of Sydney, Sydney, Australia","talk":""},{"role":"Chair","name":"Cristina Elisa Alvarez Martinez","aff":"Unicamp, Campinas, SP","talk":""}],"tracks":["micro"],"pt":false},{"day":2,"start":540,"end":600,"id":"d3b2c0","type":"Oral session","title":"Prêmio Aguinaldo Luiz Simões","series":"Oral presentations (award session)","room":"Ribeirão","area":"","code":"","note":"Sponsorship: Prof. Dr. Aguinaldo Luiz Simões","people":[{"role":"Speaker","name":"Carlos Alberto Tello Ayllon","aff":"Instituto De Medicina Legal Do Peru - Ministério Público, Lima, Peru","talk":"Genetic affinity and population structure inferred through autosomal STR network analysis in populations from Ayacucho, Peru"},{"role":"Speaker","name":"João Victor Hamamura Toloi","aff":"Instituto De Biociências, Unesp, Botucatu, SP","talk":"Beyond short tandem repeats: The human leukocyte antigen system as a source of highly informative microhaplotypes for forensic DNA mixture deconvolution"},{"role":"Speaker","name":"Matheus de Sousa Ferrari","aff":"FMRP - USP, Ribeirão Preto, SP","talk":"Genotyping de STRs via oxford nanopore technologies: bioinfomartic comparison tools"},{"role":"Speaker","name":"Samyra Espíndola Lima","aff":"Universidade De Brasília, Brasília, DF","talk":"Performance of the forenseq signature plus kit for eye and hair color prediction in a highly admixed Brazilian population"},{"role":"Speaker","name":"Vítor Matheus Soares Moraes","aff":"Faculdade De Medicina De Ribeirão Preto, Ribeirão Preto, SP","talk":"The forensic potential of oxford nanopore sequencing for haplotype inference"}],"tracks":["forensic"],"pt":false},{"day":2,"start":630,"end":720,"id":"d3b4c0","type":"Symposium","title":"Omics applied to greenhouse gases and complex production problems mitigation","series":"","room":"Sambaqui 5","area":"INTERDISCIPLINARY (BIOINFORMATICS)","code":"I.B.","note":"","people":[{"role":"Chair","name":"Mônica Corrêa Ledur","aff":"EMBRAPA","talk":""},{"role":"Speaker","name":"Mônica Corrêa Ledur","aff":"EMBRAPA","talk":"Omics applied to mitigate complex production problems"},{"role":"Speaker","name":"Luciana de Almeida Regitano","aff":"Embrapa Pecuária Sudeste, São Carlos, SP","talk":"The holoruminant concept applied to green house gas mitigation"},{"role":"Speaker","name":"Luiz Lehmann Coutinho","aff":"ESALQ/USP, Piracicaba, SP","talk":"Omics Applied to the Mitigation of Greenhouse Gases"}],"tracks":["bioinfo","inter"],"pt":false},{"day":2,"start":630,"end":720,"id":"d3b4c1","type":"Symposium","title":"Oligo-FISH in plants: Molecular precision for 21st-century cytogenomics","series":"","room":"Arvoredo 6","area":"PLANT GENETICS AND BREEDING","code":"P.G.B.","note":"","people":[{"role":"Chair","name":"Ana Maria Benko Iseppon","aff":"UFPE","talk":""},{"role":"Speaker","name":"Andrea Pedrosa Harand","aff":"UFPE","talk":"Contributions of Oligo-FISH in the genomic era"},{"role":"Speaker","name":"Ana Christina Brasileiro Vidal","aff":"UFPE, Recife, PE","talk":"Impact of cytogenomic alterations on the karyotypic evolution of Vigna savi"},{"role":"Speaker","name":"Nina Soares","aff":"ESALQ/USP, Piracicaba, SP","talk":"Unraveling chromosome pairing in Saccharum"}],"tracks":["plant"],"pt":false},{"day":2,"start":630,"end":720,"id":"d3b4c2","type":"Symposium","title":"From gene to genomics: regulatory innovation in emerging Evo-Devo model organisms","series":"","room":"Sambaqui 3","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Chair","name":"Rodrigo Nunes da Fonseca","aff":"NUPEM-UFRJ, Macaé, RJ","talk":""},{"role":"Speaker","name":"Patricia N. Schneider","aff":"Louisiana State University, Baton Rouge, LA, USA","talk":"Exploring the mechanisms of visual perception and novelty in the four-eyed fish Anableps anableps"},{"role":"Speaker","name":"Bruno Cossermelli Vellutini","aff":"UFMG","talk":"Integrating genetics and tissue mechanics to understand the evolution of development"},{"role":"Speaker","name":"Rodrigo Nunes da Fonseca","aff":"NUPEM-UFRJ, Macaé, RJ","talk":"Bridging ecology, development, and genomics in novel arthropod models"}],"tracks":["evo"],"pt":false},{"day":2,"start":630,"end":720,"id":"d3b4c3","type":"Symposium","title":"Fish genetic resources and breeding - state of the art and prospects for Brazilian aquaculture","series":"","room":"Arvoredo 4","area":"ANIMAL GENETICS AND BREEDING","code":"A.G.B.","note":"","people":[{"role":"Chair","name":"Alexandre Wagner Silva Hilsdorf","aff":"UMC, Mogi das Cruzes, SP","talk":""},{"role":"Speaker","name":"Alexandre Wagner Silva Hilsdorf","aff":"UMC, Mogi das Cruzes, SP","talk":"Aquatic genetic resources: Characterization and conservation for the sustainable development of national aquaculture"},{"role":"Speaker","name":"Danillo Pinhal","aff":"UNESP","talk":"Deciphering non-coding RNAs: New frontiers for genetic improvement in farmed fish"},{"role":"Speaker","name":"Fernanda Loureiro de Almeida Osullivan","aff":"Embrapa Pesca e Aquicultura","talk":"Gene editing in aquaculture: From the lab to production systems"}],"tracks":["animal"],"pt":false},{"day":2,"start":630,"end":720,"id":"d3b4c4","type":"Symposium","title":"Avaliação da Pós-graduação no Brasil pela CAPES- Ciências Biológicas 1","series":"","room":"Sambaqui 1","area":"TEACHING AND GRADUATE STUDIES","code":"T.G.S.","note":"in Portuguese language only","people":[{"role":"Speaker","name":"Valdir de Queiroz Balbino","aff":"Universidade Federal de Pernambuco, Recife, PE, Brasil","talk":""},{"role":"Speaker","name":"Carlos Frederico Martins Menck","aff":"IB/USP","talk":""},{"role":"Speaker","name":"Célia Maria de Almeida Soares","aff":"UFG, Goiânia, GO","talk":""}],"tracks":["edu"],"pt":true},{"day":2,"start":630,"end":720,"id":"d3b5c0","type":"REGEM","title":"Mechanisms that shape host-microbe relationships","series":"35th REGEM · Microorganism Genetics Meeting","room":"Joaquina","area":"","code":"","note":"","people":[{"role":"Chair","name":"José Freire da Silva Neto","aff":"USP, Ribeirão Preto, SP","talk":""},{"role":"Speaker","name":"Angela Silva Barbosa","aff":"Instituto Butantan, São Paulo, SP","talk":"Unusual functions of the SPOR (Sporulation-related repeat) domain of Leptospira"},{"role":"Speaker","name":"Thaila Fernanda dos Reis","aff":"FFCLRP/USP, Ribeirão Preto, SP","talk":"Effector proteins in human pathogenic fungi"},{"role":"Speaker","name":"Ana Paula Dinis Ano Bom","aff":"Fiocruz, Rio de Janeiro, RJ","talk":"Development of RNA-based vaccines and therapies"}],"tracks":["micro"],"pt":false},{"day":2,"start":780,"end":840,"id":"d3b7c0","type":"Technical talk","title":"Technical talks: Uniscience do Brasil","series":"Technical conference · Uniscience do Brasil","room":"Sambaqui 3","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Amanda Antoniêto","aff":"Uniscience do Brasil","talk":"Mais eficiência, menos etapas: a nova era da biologia sintética com a New England Biolabs"},{"role":"Speaker","name":"Letícia Martins","aff":"Uniscience do Brasil","talk":"Transcriptômica espacial: uma nova perspectiva sobre a organização molecular dos tecidos"}],"tracks":["industry"],"pt":false},{"day":2,"start":780,"end":840,"id":"d3b7c1","type":"Technical talk","title":"Do sequenciamento de um único gene a muitos genomas por vez","series":"Technical conference · NOVOGENE","room":"Arvoredo 4","area":"","code":"N.","note":"","people":[{"role":"Speaker","name":"Jenifer Pereira Almeida de Oliveira","aff":"NOVOGENE","talk":""}],"tracks":["industry"],"pt":false},{"day":2,"start":780,"end":840,"id":"d3b7c2","type":"Technical talk","title":"Da sequência à descoberta: Como a tecnologia Nanopore pode potencializar seus resultados","series":"Technical conference · Interprise","room":"Sambaqui 1","area":"","code":"","note":"","people":[{"role":"Speaker","name":"Isabella Poleto","aff":"Interprise Brasil","talk":""}],"tracks":["industry"],"pt":false},{"day":2,"start":840,"end":930,"id":"d3b8c0","type":"Symposium","title":"Genomic instability and cancer treatments","series":"","room":"Arvoredo 2","area":"MUTAGENESIS, CYTOTOXICITY, AND GENOTOXICITY","code":"M. / C. / G.","note":"","people":[{"role":"Chair","name":"Fabio Luis Forti","aff":"IQ/USP","talk":""},{"role":"Speaker","name":"Wanessa Altei","aff":"CPOM-HCBarretos, Barretos, SP","talk":"Investigation of mechanisms of radioresistance in head and neck cancer: the role of extracellular vesicles and immune modulation"},{"role":"Speaker","name":"Fabio Luis Forti","aff":"IQ/USP","talk":"Reprogramming of radio and chemoresistant GBMs: disruption of the actin cytoskeleton increases responses to ionizing radiation and temozolomide in vitro and in vivo"},{"role":"Speaker","name":"Gabriel O. Sawakuchi","aff":"University of Texas, Houston, Texas, USA","talk":"Alpha and proton therapy in cancer resistance"}],"tracks":["muta"],"pt":false},{"day":2,"start":840,"end":930,"id":"d3b8c1","type":"Symposium","title":"Viral metagenomics: Current knowledge on Brazilian biodiversity and its zoonotic potential","series":"","room":"Sambaqui 5","area":"MICROBIAL GENETICS","code":"M.G.","note":"","people":[{"role":"Chair","name":"Gabriel da Luz Wallau","aff":"IAM/Fiocruz","talk":""},{"role":"Speaker","name":"Anderson Fernandes de Brito","aff":"ITpS, São Paulo, SP","talk":"Metagenomic surveillance of synanthropic bats: a cost-effective strategy for zoonotic virus discovery in the context of rabies surveillance"},{"role":"Speaker","name":"Ricardo Durães-Carvalho","aff":"UNIFESP","talk":"Viral evolution and diversity in Brazilian bats: Metatranscriptomic insights for surveillance and early detection of zoonoses"},{"role":"Speaker","name":"Luiz Gustavo Bentim Góes","aff":"Institut Pasteur de São Paulo, São Paulo, SP","talk":"Can neotropical bats act as reservoirs for emerging viruses?"},{"role":"Speaker","name":"Gabriel da Luz Wallau","aff":"IAM/Fiocruz","talk":"Viral microbial communities in wildlife: Recent findings in mosquitoes, bats, and birds"}],"tracks":["micro"],"pt":false},{"day":2,"start":840,"end":930,"id":"d3b8c2","type":"Symposium","title":"Dynamic RNA landscapes in plant biology","series":"","room":"Arvoredo 6","area":"PLANT GENETICS AND BREEDING","code":"P.G.B.","note":"","people":[{"role":"Chair","name":"Cristiane Paula Gomes Calixto","aff":"IB/USP","talk":""},{"role":"Speaker","name":"Ezequiel Petrillo","aff":"UBA-CONICET, Buenos Aires, Argentina","talk":"Alternative splicing in plant adaptation to the environment"},{"role":"Speaker","name":"Thiago Barros Galvão","aff":"John Innes Centre, Norwich, Inglaterra","talk":"Transgenerational epigenetics shaping seed physiology"},{"role":"Speaker","name":"Fabio Tebaldi Silveira Nogueira","aff":"ESALQ/USP","talk":"Extracellular plant microRNAs: Roles in development and interactions with the rhizosphere microbiome"}],"tracks":["plant"],"pt":false},{"day":2,"start":840,"end":930,"id":"d3b8c3","type":"Symposium","title":"30 years of Conservation Genetics in SBG","series":"","room":"Sambaqui 3","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Chair","name":"Eduardo Eizirik","aff":"PUCRS, Porto Alegre, RS","talk":""},{"role":"Speaker","name":"Eduardo Eizirik","aff":"PUCRS, Porto Alegre, RS","talk":"Conservation genetics of neotropical carnivores"},{"role":"Speaker","name":"Cristina Yumi Miyaki","aff":"IB/USP, São Paulo, SP","talk":"Conservation genetics of neotropical birds"},{"role":"Speaker","name":"Fabrício Rodrigues dos Santos","aff":"UFMG","talk":"Conservation genetics of neotropical vertebrates"}],"tracks":["evo"],"pt":false},{"day":2,"start":840,"end":930,"id":"d3b8c4","type":"Symposium","title":"Challenges and opportunities of open science in advancing Brazilian genetics and genomics","series":"","room":"Arvoredo 4","area":"INTERDISCIPLINARY","code":"I.","note":"","people":[{"role":"Chair","name":"Rachel Turba de Paula","aff":"PUCRS, Porto Alegre, RS","talk":""},{"role":"Speaker","name":"Eduarda Gervini Zampieri Centeno","aff":"UFSC","talk":"The Brazilian reproducibility network: past, present, and future"},{"role":"Speaker","name":"Camila Mazzoni","aff":"Leibniz Institute for Zoo and Wildlife Research, Berlim, Germany","talk":"Will open genomes become a reality in Brazil? Lessons and inspirations from the european model"},{"role":"Speaker","name":"Manuela da Silva","aff":"FIOCRUZ","talk":"The context and challenges of the legal framework for digital sequence information of genetic resources (DSI)"}],"tracks":["inter"],"pt":false},{"day":2,"start":840,"end":930,"id":"d3b8c5","type":"Symposium","title":"Systems biology in human complexes diseases","series":"","room":"Jurerê","area":"","code":"","note":"","people":[{"role":"Chair","name":"Rodrigo Juliani Siqueira Dalmolin","aff":"UFRN, Natal, RN","talk":""},{"role":"Speaker","name":"Patrícia Ribeiro Pereira","aff":"Washington University School of Medicine, St. Louis, MO, USA","talk":"Imaging tumor heterogeneity and therapy response across biological scales"},{"role":"Speaker","name":"Ricardo D'Oliveira Albanus","aff":"Washington University School of Medicine, St. Louis, MO, USA","talk":"Reframing Alzheimer's disease genetic risk from causal cells to causal cellular networks"},{"role":"Speaker","name":"Gilderlanio Santana de Araújo","aff":"UFPA, Belém, PA","talk":"NDDB: A regulatory network database for neurodegenerative diseases"}],"tracks":["human","bioinfo"],"pt":false},{"day":2,"start":840,"end":930,"id":"d3b9c0","type":"REGEM","title":"Cell signaling, regulation and the central dogma","series":"35th REGEM · Microorganism Genetics Meeting","room":"Joaquina","area":"","code":"","note":"","people":[{"role":"Chair","name":"Ricardo Mazzon","aff":"UFSC, Florianópolis, SC","talk":""},{"role":"Speaker","name":"Santuza Maria Ribeiro Teixeira","aff":"UFMG","talk":"Manipulating genomes to understand parasite-host relationships"},{"role":"Speaker","name":"Roberto do Nascimento Silva","aff":"FMRP/USP, Ribeirão Preto, SP","talk":"When fungi feel the sugar: sensing and gene activation networks in Trichoderma reesei"},{"role":"Speaker","name":"Juliana Alves Parente Rocha","aff":"UFG, Goiânia, GO","talk":"New insights on the molecular strategies used by Staphylococcus saprophyticus to modulate biofilm formation and to uptake micronutrients"}],"tracks":["micro"],"pt":false},{"day":2,"start":960,"end":1050,"id":"d3b11","type":"Meeting","title":"SBG General Assembly","series":"","room":"Arvoredo 6","area":"","code":"","note":"","people":[],"tracks":[],"pt":false},{"day":2,"start":1050,"end":1170,"id":"d3b12","type":"Poster session","title":"Poster Session","series":"","room":"Poster area","area":"","code":"","note":"","people":[],"tracks":[],"pt":false},{"day":3,"start":540,"end":600,"id":"d4b0c0","type":"Plenary","title":"Neglected diseases, neglected diversity? Cryptic species in sand fly vectors of Leishmania and the limits of genetic evidence","series":"","room":"Sambaqui 3","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Speaker","name":"Valdir de Queiroz Balbino","aff":"Universidade Federal de Pernambuco, Recife, PE, Brasil","talk":""},{"role":"Chair","name":"Carlos Brisola Marcondes","aff":"UFSC, Florianópolis, SC","talk":""}],"tracks":["evo"],"pt":false},{"day":3,"start":540,"end":600,"id":"d4b0c1","type":"Plenary","title":"Friends or foes? Polymicrobial dynamics of human pathogens","series":"","room":"Arvoredo 4","area":"MICROBIAL GENETICS","code":"M.G.","note":"","people":[{"role":"Speaker","name":"Marilene Henning Vainstein","aff":"UFRGS, Porto Alegre, RS","talk":""},{"role":"Chair","name":"Célia Maria de Almeida Soares","aff":"UFG, Goiânia, GO","talk":""}],"tracks":["micro"],"pt":false},{"day":3,"start":540,"end":600,"id":"d4b0c2","type":"Plenary","title":"Migration patterns of Native American ancestors across South America, inferred from paternal lineages in present-day populations","series":"","room":"Sambaqui 1","area":"HUMAN GENETICS","code":"H.G.","note":"","people":[{"role":"Speaker","name":"Maria Leonor R. de S. Botelho de Gusmão","aff":"UERJ, Rio de Janeiro, RJ","talk":""},{"role":"Chair","name":"Ândrea Ribeiro dos Santos","aff":"UFPA, Belém, PA","talk":""}],"tracks":["human"],"pt":false},{"day":3,"start":540,"end":600,"id":"d4b0c3","type":"Plenary","title":"Unraveling plant-multitrophic interactions","series":"","room":"Arvoredo 2","area":"PLANT GENETICS AND BREEDING","code":"P.G.B.","note":"","people":[{"role":"Speaker","name":"Marcio de Castro Silva Filho","aff":"ESALQ/USP, Piracicaba, SP","talk":""},{"role":"Chair","name":"Marcia Pinheiro Margis","aff":"UFRGS, Porto Alegre, RS","talk":""}],"tracks":["plant"],"pt":false},{"day":3,"start":540,"end":600,"id":"d4b0c4","type":"Plenary","title":"From the RNA era to the DNA era: molecular pathways of biological information","series":"","room":"Jurerê","area":"EVOLUTIONARY GENETICS","code":"E.G.","note":"","people":[{"role":"Speaker","name":"Savio Torres de Farias","aff":"UFPB, João Pessoa, PB","talk":""},{"role":"Chair","name":"Tiana Kohlsdorf","aff":"FFCLRP/USP, Ribeirão Preto, SP","talk":""}],"tracks":["evo"],"pt":false},{"day":3,"start":630,"end":720,"id":"d4b2c0","type":"Symposium","title":"Ensino de Genética na era pós genômica","series":"","room":"Sambaqui 1","area":"PESQUISA EM ENSINO DE GENÉTICA","code":"P.E.G.","note":"(in Portuguese language only)","people":[{"role":"Chair","name":"Maria de Nazare Klautau Guimaraes","aff":"UnB, Brasília, DF","talk":""},{"role":"Speaker","name":"Fernanda Franzolin","aff":"UFABC","talk":"Complexidade genética no ensino de biologia: Possibilidades, desafios e aceitabilidade"},{"role":"Speaker","name":"Priscilla Guimarães Zanella Diniz","aff":"Colégio Santa Doroteia, Belo Horizonte, MG","talk":"Imagens e o ensino de genética na educação básica"},{"role":"Speaker","name":"Maria de Nazare Klautau Guimaraes","aff":"UnB, Brasília, DF","talk":"O ensino de genética: além de Mendel, além do DNA"}],"tracks":["edu"],"pt":true},{"day":3,"start":630,"end":720,"id":"d4b2c1","type":"Symposium","title":"Microbial genomics: From environment to clinics","series":"","room":"Arvoredo 2","area":"BIOINFORMATICS","code":"B.","note":"","people":[{"role":"Chair","name":"Julliane Dutra Medeiros","aff":"UFJF, Juiz de Fora, MG","talk":""},{"role":"Speaker","name":"Julliane Dutra Medeiros","aff":"UFJF, Juiz de Fora, MG","talk":"Enterobacter resistome and mobilome: from food chains to clinical settings"},{"role":"Speaker","name":"Fabienne Antunes Ferreira","aff":"UFSC, Florianópolis, SC","talk":"Genomic surveillance reveals hidden bacterial outbreaks and risks in hospitals and farms"},{"role":"Speaker","name":"Thaís Cristine Marques Sincero","aff":"UFSC, Florianópolis, SC","talk":"Genomic approaches for integrated surveillance in a One Health framework"}],"tracks":["bioinfo"],"pt":false},{"day":3,"start":630,"end":720,"id":"d4b2c2","type":"Symposium","title":"Advanced 2D and 3D in vitro tumor models for investigating mutagenesis, genomic instability, and chemoresistance mechanisms","series":"","room":"Jurerê","area":"MUTAGÊNESE, CITO E PLANT GENETICS AND BREEDING","code":"M. / C.P.G.B.","note":"","people":[{"role":"Chair","name":"Diego Luis Ribeiro","aff":"ICB/USP","talk":""},{"role":"Speaker","name":"Diego Luis Ribeiro","aff":"ICB/USP","talk":"Translesion synthesis as a driver of temozolomide resistance in glioblastoma multiforme: insights from 3d spheroid models and fluorescent reporter systems"},{"role":"Speaker","name":"Juliana Mara Serpeloni","aff":"UEL","talk":"2D and 3D in vitro models for drug discovery and chemoresistance assessment in urological tumors"},{"role":"Speaker","name":"Renato José da Silva Oliveira","aff":"CPOM/Hospital do Amor de Barretos, Barretos, SP","talk":"Investigating resistance mechanisms to kras inhibitors using 3d tumor cell models"}],"tracks":["muta"],"pt":false},{"day":3,"start":630,"end":720,"id":"d4b2c3","type":"Symposium","title":"SBG introduces the progress of young plant scientists from Serrapilheira Institute","series":"","room":"Sambaqui 3","area":"PLANT GENETICS AND BREEDING","code":"P.G.B.","note":"","people":[{"role":"Chair","name":"Elizabeth Pacheco Batista Fontes","aff":"UFV, Viçosa, MG","talk":""},{"role":"Speaker","name":"Paulo José Pereira Lima Teixeira","aff":"ESALQ/USP, Piracicaba, SP","talk":"Disease-induced metabolic changes restructure the soybean Phyllosphere microbiome"},{"role":"Speaker","name":"Cristiane Paula Gomes Calixto","aff":"IB/USP","talk":"A multi-layered regulatory landscape of thermotolerance in rice"},{"role":"Speaker","name":"Felipe Klein Ricachenevsky","aff":"UFRGS","talk":"One ring to control them all? Uncovering the plant ionome for food biofortification"}],"tracks":["plant"],"pt":false},{"day":3,"start":630,"end":720,"id":"d4b2c4","type":"Symposium","title":"Small ORFs, big questions: What really counts as a gene?","series":"","room":"Arvoredo 4","area":"INTERDISCIPLINARY (ANIMAL)","code":"I.A.","note":"","people":[{"role":"Chair","name":"Rodrigo Nunes da Fonseca","aff":"NUPEM-UFRJ, Macaé, RJ","talk":""},{"role":"Speaker","name":"Rodrigo Nunes da Fonseca","aff":"NUPEM-UFRJ, Macaé, RJ","talk":"sORFs in development and evolution: Expanding the functional genome"},{"role":"Speaker","name":"Alexandre Rossi Paschoal","aff":"The Rosalind Franklin Institute/UTFPR, Curitiba, PR","talk":"Small open reading frame-encoded peptides as hidden treasures"},{"role":"Speaker","name":"Bruno Dallagiovanna Muniz","aff":"Instituto Carlos Chagas - Fiocruz, Curitiba, PR","talk":"Evolutionary origins and degradation determinants in human microproteins"}],"tracks":["animal","inter"],"pt":false},{"day":3,"start":630,"end":720,"id":"d4b3c0","type":"REGEM","title":"One Health strategies for surveillance, prevention and control of emerging and reemerging pathogens in a changing environment","series":"35th REGEM · Microorganism Genetics Meeting","room":"Joaquina","area":"","code":"","note":"","people":[{"role":"Chair","name":"Isabelle Freire Tabosa Viana","aff":"Universidade Federal de Pernambuco, Recife, PE","talk":""},{"role":"Speaker","name":"Nilmar Moretti","aff":"UNIFESP, São Paulo, SP","talk":"Epitranscriptomic memory via m6A shapes drug resistance in Leishmania: A rapid, reversible switch in an emerging zoonotic pathogen"},{"role":"Speaker","name":"Marilene Henning Vainstein","aff":"UFRGS, Porto Alegre, RS","talk":"The marine resistome: A One Health perspective on antimicrobial resistance surveillance in coastal ecosystems"},{"role":"Speaker","name":"Felipe Gomes Naveca","aff":"Fiocruz, Manaus, AM","talk":"Genomic surveillance of neglected, emerging, and/or reemerging viruses in the Amazon: anticipating potential health emergencies"}],"tracks":["micro"],"pt":false},{"day":3,"start":750,"end":810,"id":"d4b4","type":"Ceremony","title":"Closing ceremony","series":"","room":"Main hall","area":"","code":"","note":"","people":[],"tracks":[],"pt":false}],"ambient":[{"day":0,"start":480,"end":1080,"title":"Registration Desk Open","room":""},{"day":0,"start":840,"end":1080,"title":"Exhibition Fair Opening","room":""},{"day":1,"start":600,"end":630,"title":"Coffee Break","room":""},{"day":1,"start":720,"end":840,"title":"Lunch · Executive board meeting","room":""},{"day":1,"start":930,"end":960,"title":"Coffee Break","room":""},{"day":2,"start":600,"end":630,"title":"Coffee Break","room":""},{"day":2,"start":720,"end":840,"title":"Lunch · Former Presidents Forum","room":""},{"day":2,"start":930,"end":960,"title":"Coffee Break","room":""},{"day":3,"start":600,"end":630,"title":"Coffee Break","room":""}]};
+const AS_OF = '2026-09-29';
+const I18N = {
+en:{
+  unofficial:'Unofficial tool · not affiliated with SBG', officialLink:'Official program ↗', subtitle:'Unofficial program planner',
+  tabProgram:'Program', tabPlan:'My schedule',
+  exploreSub:n=>`${n} sessions over 4 days. Tap a card for details, or Add to pick it.`,
+  helpTitle:'How to use', help1:'Browse each day, or search for a topic, speaker or institution.', help2:'Tap Add for “Going”, or open a card to choose “Maybe”, star talks and write notes.',
+  help3:'In My schedule, fix time clashes and export everything to your calendar (.ics).', help4:'Share your code with a friend to compare schedules.',
+  search:'Search titles, speakers, institutions…', allTracks:'All areas', allTypes:'All session types', allRooms:'All rooms',
+  hidePt:'Hide Portuguese-only', mineOnly:'My picks only', clear:'Clear filters',
+  sessions:'sessions', match:n=>`${n} match${n===1?'':'es'}`, going:'going', maybe:'maybe',
+  add:'Add', goingB:'Going', maybeB:'Maybe', notGoing:'Not going', ptOnly:'PT only', conflict:'Conflict', starred:'★ starred', note:'✎ note',
+  noMatch:d=>`No sessions match on ${d}`, noMatchHelp:'Try another day (match counts are on the day buttons) or clear the filters.',
+  added:'Added to My schedule', removed:'Removed', openDetails:'Open details', addAria:'Add to schedule as Going', removeAria:'Remove from schedule',
+  conflictsWith:n=>`Conflicts with ${n} session${n>1?'s':''} you’re going to:`, overlapsWith:n=>`Overlaps with ${n} session${n>1?'s':''} you’re going to:`,
+  talksStar:'Talks (star the ones you care about)', speakers:'Speakers', instructors:'Instructors', chair:'Chair', about:'About', myNotes:'My notes',
+  notesPh:'Questions to ask, people to meet… Notes go into the calendar event.', roomUnknown:'Room not listed', inFriend:n=>`In ${n}’s schedule`,
+  roles:{Speaker:'Speaker',Chair:'Chair',Instructor:'Instructor'},
+  planH:'My <span>schedule</span>', planSub:'Resolve clashes, then export to your calendar.',
+  goingN:'going', maybeN:'maybe', conflictsN:n=>n===1?'conflict':'conflicts', hopsN:n=>n===1?'room change':'room changes',
+  copyCal:'Copy calendar text', exportIcs:'Export .ics', incMaybe:'Include “Maybe” as tentative', reminder:'Reminder', none:'none', minBefore:n=>`${n} min before`,
+  calText:'Calendar text', calTextHelp:'Copy everything below into a file named genetica-2026.ics, or paste it into a calendar app that accepts iCalendar text.',
+  resolve:n=>`Resolve ${n} time conflict${n>1?'s':''}`, keepThis:'Keep this', keepAll:'Keep all (I’ll switch rooms partway)', keepNote:'“Keep this” moves the other sessions to Maybe, so they stay in view.',
+  hopsTitle:'Room changes with no break', vCal:'Calendar', vList:'Agenda list', calLegend:'Hatched bands are breaks. Dashed = Maybe. Dotted = friend’s pick.',
+  emptyPlan:'Nothing picked yet', emptyPlanHelp:'Open the Program tab and tap Add on a session, or open it to mark Going or Maybe.',
+  nothingExport:'Nothing to export yet.', savedN:n=>`Saved ${n} events. Unzip it and open the .ics with your calendar.`, exportedN:n=>`Exported ${n} events.`,
+  promptOpen:'A save prompt is already open.', saveUnavailable:'Saving isn’t available here, so the calendar text is shown below to copy.',
+  copiedN:n=>`Copied ${n} events as iCalendar text.`, selectCopy:'Select all in the box below and copy.',
+  resolved:'Conflict resolved. The others are now Maybe.',
+  shareTitle:'Share and compare', shareMine:'Your schedule code. Send it to a friend (WhatsApp, email…). It contains only which sessions you picked, not your notes.',
+  shareFriend:'Paste a friend’s code to see their picks next to yours. Nothing changes in your schedule until you choose.', friendName:'Friend’s name (optional)', friendCode:'Paste code here', compare:'Compare', copy:'Copy',
+  codeCopied:'Code copied.', codeEmpty:'Pick some sessions first.', codeBad:'That code doesn’t look right. Check that it was copied completely.',
+  friendDefault:'Friend', friendShowing:(n,c)=>`Showing <b>${n}</b>’s schedule: ${c} session${c===1?'':'s'}`, addAllMaybe:'Add all as Maybe', hideFriend:'Stop comparing', friendAdded:n=>`Added ${n} session${n===1?'':'s'} as Maybe.`,
+  disclaimer:'Unofficial, independent planner. It is not affiliated with or endorsed by the Sociedade Brasileira de Genética (SBG) or the congress organizers. The program was copied from the official website on 29 September 2026 and may change: always confirm times and rooms in the official program.',
+  privacy:'Your picks, stars and notes are stored only in this browser on this device. Nothing is sent anywhere.',
+  ics:{maybe:'(Maybe) ', track:'Area', ptOnly:'Portuguese only', chair:'Chair', notes:'My notes', loc:'Genética 2026, Florianópolis'},
+  wings:{'Sambaqui wing':'Sambaqui','Arvoredo wing':'Arvoredo','Beach rooms':'Beach rooms','Other':'Other'},
+  days:[['Tue 29','Tuesday, 29 September'],['Wed 30','Wednesday, 30 September'],['Thu 1','Thursday, 1 October'],['Fri 2','Friday, 2 October']],
+  tracks:{evo:['Evolutionary Genetics','Evolutionary'],plant:['Plant Genetics & Breeding','Plant'],micro:['Microbial Genetics','Microbial'],animal:['Animal Genetics & Breeding','Animal'],bioinfo:['Bioinformatics & Omics','Bioinfo & Omics'],human:['Human & Medical Genetics','Human & Medical'],muta:['Mutagenesis & Genotoxicity','Mutagenesis'],forensic:['Forensic Genetics','Forensic'],edu:['Genetics Education','Education'],inter:['Interdisciplinary','Interdisciplinary'],society:['Scientific societies','Societies'],industry:['Industry / sponsors','Industry']},
+  types:{}, rooms:{'Main hall':'Main hall','Praça':'Praça','Poster area':'Poster area','Off-site':'Off-site'},
+  roomFull:{'Main hall':'Main hall (Sambaqui 5+3 & Arvoredo 6+4)','Praça':'Genética na Praça (outreach area)'},
+  ambient:{}
+},
+pt:{
+  unofficial:'Ferramenta não oficial · sem vínculo com a SBG', officialLink:'Programação oficial ↗', subtitle:'Planejador não oficial da programação',
+  tabProgram:'Programação', tabPlan:'Minha agenda',
+  exploreSub:n=>`${n} sessões em 4 dias. Toque num card para ver detalhes, ou em Adicionar para escolher.`,
+  helpTitle:'Como usar', help1:'Navegue por dia ou busque por tema, palestrante ou instituição.', help2:'Toque em Adicionar para “Vou”, ou abra o card para marcar “Talvez”, dar estrela em palestras e escrever notas.',
+  help3:'Em Minha agenda, resolva conflitos de horário e exporte tudo para seu calendário (.ics).', help4:'Compartilhe seu código com um amigo para comparar agendas.',
+  search:'Buscar títulos, palestrantes, instituições…', allTracks:'Todas as áreas', allTypes:'Todos os tipos de sessão', allRooms:'Todas as salas',
+  hidePt:'Ocultar sessões só em português', mineOnly:'Só minhas escolhas', clear:'Limpar filtros',
+  sessions:'sessões', match:n=>`${n} resultado${n===1?'':'s'}`, going:'vou', maybe:'talvez',
+  add:'Adicionar', goingB:'Vou', maybeB:'Talvez', notGoing:'Não vou', ptOnly:'Só em PT', conflict:'Conflito', starred:'★ com estrela', note:'✎ nota',
+  noMatch:d=>`Nenhuma sessão encontrada em ${d}`, noMatchHelp:'Tente outro dia (o número de resultados aparece nos botões dos dias) ou limpe os filtros.',
+  added:'Adicionado à Minha agenda', removed:'Removido', openDetails:'Abrir detalhes', addAria:'Adicionar à agenda como Vou', removeAria:'Remover da agenda',
+  conflictsWith:n=>`Conflita com ${n} ${n>1?'sessões':'sessão'} que você vai:`, overlapsWith:n=>`Sobrepõe-se a ${n} ${n>1?'sessões':'sessão'} que você vai:`,
+  talksStar:'Palestras (marque com estrela as que interessam)', speakers:'Palestrantes', instructors:'Ministrantes', chair:'Coordenação', about:'Sobre', myNotes:'Minhas notas',
+  notesPh:'Perguntas, pessoas para conhecer… As notas vão para o evento da agenda.', roomUnknown:'Sala não informada', inFriend:n=>`Na agenda de ${n}`,
+  roles:{Speaker:'Palestrante',Chair:'Coordenação',Instructor:'Ministrante'},
+  planH:'Minha <span>agenda</span>', planSub:'Resolva conflitos e exporte para seu calendário.',
+  goingN:'vou', maybeN:'talvez', conflictsN:n=>n===1?'conflito':'conflitos', hopsN:n=>n===1?'troca de sala':'trocas de sala',
+  copyCal:'Copiar texto da agenda', exportIcs:'Exportar .ics', incMaybe:'Incluir “Talvez” como provisório', reminder:'Lembrete', none:'nenhum', minBefore:n=>`${n} min antes`,
+  calText:'Texto da agenda', calTextHelp:'Copie tudo abaixo para um arquivo chamado genetica-2026.ics, ou cole num app de calendário que aceite texto iCalendar.',
+  resolve:n=>`Resolva ${n} conflito${n>1?'s':''} de horário`, keepThis:'Manter este', keepAll:'Manter todos (vou trocar de sala no meio)', keepNote:'“Manter este” move as outras sessões para Talvez, para que continuem visíveis.',
+  hopsTitle:'Trocas de sala sem intervalo', vCal:'Calendário', vList:'Lista', calLegend:'Faixas hachuradas são intervalos. Tracejado = Talvez. Pontilhado = escolha do amigo.',
+  emptyPlan:'Nada escolhido ainda', emptyPlanHelp:'Abra a aba Programação e toque em Adicionar numa sessão, ou abra o card para marcar Vou ou Talvez.',
+  nothingExport:'Nada para exportar ainda.', savedN:n=>`${n} eventos salvos. Descompacte e abra o .ics no seu calendário.`, exportedN:n=>`${n} eventos exportados.`,
+  promptOpen:'Já há uma janela de salvamento aberta.', saveUnavailable:'Não é possível salvar aqui; o texto da agenda aparece abaixo para copiar.',
+  copiedN:n=>`${n} eventos copiados como texto iCalendar.`, selectCopy:'Selecione tudo na caixa abaixo e copie.',
+  resolved:'Conflito resolvido. As outras sessões agora são Talvez.',
+  shareTitle:'Compartilhar e comparar', shareMine:'Código da sua agenda. Envie para um amigo (WhatsApp, e-mail…). Ele contém só as sessões escolhidas, não suas notas.',
+  shareFriend:'Cole o código de um amigo para ver as escolhas dele ao lado das suas. Nada muda na sua agenda até você decidir.', friendName:'Nome do amigo (opcional)', friendCode:'Cole o código aqui', compare:'Comparar', copy:'Copiar',
+  codeCopied:'Código copiado.', codeEmpty:'Escolha algumas sessões primeiro.', codeBad:'Esse código não parece válido. Confira se foi copiado inteiro.',
+  friendDefault:'Amigo', friendShowing:(n,c)=>`Mostrando a agenda de <b>${n}</b>: ${c} ${c===1?'sessão':'sessões'}`, addAllMaybe:'Adicionar todas como Talvez', hideFriend:'Parar de comparar', friendAdded:n=>`${n} ${n===1?'sessão adicionada':'sessões adicionadas'} como Talvez.`,
+  disclaimer:'Planejador independente e não oficial. Não tem vínculo nem aval da Sociedade Brasileira de Genética (SBG) ou da organização do congresso. A programação foi copiada do site oficial em 29 de setembro de 2026 e pode mudar: confirme sempre horários e salas na programação oficial.',
+  privacy:'Suas escolhas, estrelas e notas ficam salvas só neste navegador, neste aparelho. Nada é enviado para lugar nenhum.',
+  ics:{maybe:'(Talvez) ', track:'Área', ptOnly:'Somente em português', chair:'Coordenação', notes:'Minhas notas', loc:'Genética 2026, Florianópolis'},
+  wings:{'Sambaqui wing':'Sambaqui','Arvoredo wing':'Arvoredo','Beach rooms':'Salas praia','Other':'Outros'},
+  days:[['Ter 29','terça-feira, 29 de setembro'],['Qua 30','quarta-feira, 30 de setembro'],['Qui 1','quinta-feira, 1º de outubro'],['Sex 2','sexta-feira, 2 de outubro']],
+  tracks:{evo:['Genética Evolutiva','Evolutiva'],plant:['Genética e Melhoramento Vegetal','Vegetal'],micro:['Genética de Microrganismos','Microrganismos'],animal:['Genética e Melhoramento Animal','Animal'],bioinfo:['Bioinformática e Ômicas','Bioinfo e Ômicas'],human:['Genética Humana e Médica','Humana e Médica'],muta:['Mutagênese e Genotoxicidade','Mutagênese'],forensic:['Genética Forense','Forense'],edu:['Ensino de Genética','Ensino'],inter:['Interdisciplinar','Interdisciplinar'],society:['Sociedades científicas','Sociedades'],industry:['Indústria / patrocinadores','Indústria']},
+  types:{'Mini course':'Minicurso','Plenary':'Plenária','Symposium':'Simpósio','Panel':'Painel','Forensic Genetics Symposium':'Simpósio de Genética Forense','REGEM':'REGEM','Technical talk':'Palestra técnica','Outreach workshop':'Oficina (Genética na Praça)','Award session':'Sessão de prêmio','Oral session':'Sessão oral','Poster session':'Sessão de pôsteres','Social':'Confraternização','Ceremony':'Cerimônia','Meeting':'Reunião'},
+  rooms:{'Main hall':'Salão principal','Praça':'Praça','Poster area':'Área de pôsteres','Off-site':'Fora do local'},
+  roomFull:{'Main hall':'Salão principal (Sambaqui 5+3 e Arvoredo 6+4)','Praça':'Genética na Praça (área de extensão)'},
+  ambient:{'Registration Desk Open':'Credenciamento aberto','Exhibition Fair Opening':'Abertura da feira de exposição','Coffee Break':'Coffee break','Lunch · Executive board meeting':'Almoço · Reunião da diretoria','Lunch · Former Presidents Forum':'Almoço · Fórum de ex-presidentes'}
+}};
+let LANG = 'en';
+const T = k => I18N[LANG][k];
+const tType = t => I18N[LANG].types[t] || t;
+const tRoom = r => I18N[LANG].rooms[r] || r;
+const tRoomFull = r => I18N[LANG].roomFull[r] || tRoom(r);
+const tTrack = (k,short) => (I18N[LANG].tracks[k]||[k,k])[short?1:0];
+const tAmb = a => I18N[LANG].ambient[a] || a;
+const tRole = r => I18N[LANG].roles[r] || r;
+const dayShort = i => I18N[LANG].days[i][0], dayLong = i => I18N[LANG].days[i][1];
+
+const ROOMS = [
+  ['Sambaqui wing',[['Sambaqui 1','--r-s1'],['Sambaqui 3','--r-s3'],['Sambaqui 5','--r-s5']]],
+  ['Arvoredo wing',[['Arvoredo 2','--r-a2'],['Arvoredo 4','--r-a4'],['Arvoredo 6','--r-a6']]],
+  ['Beach rooms',[['Jurerê','--r-jur'],['Joaquina','--r-joa'],['Armação','--r-arm'],['Ribeirão','--r-rib']]],
+  ['Other',[['Main hall','--r-main'],['Praça','--r-praca'],['Poster area','--r-post'],['Off-site','--r-off']]]];
+const ROOM_VAR = {}, ROOM_WING = {};
+ROOMS.forEach(([w,rs])=>rs.forEach(([r,v])=>{ROOM_VAR[r]=v; ROOM_WING[r]=w;}));
+const rc = r => `var(${ROOM_VAR[r]||'--r-off'})`;
+const S = DATA.sessions, AMB = DATA.ambient;
+const BY_ID = Object.fromEntries(S.map(s=>[s.id,s]));
+const IDX = Object.fromEntries(S.map((s,i)=>[s.id,i]));
+const TYPES = [...new Set(S.map(s=>s.type))].sort();
+const TRACK_KEYS = Object.keys(I18N.en.tracks);
+
+const fold = t => (t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+S.forEach(s=>{ s.hay = fold([s.title,s.series,s.area,s.type,I18N.pt.types[s.type]||'',s.room,s.note,...s.tracks.flatMap(t=>[I18N.en.tracks[t][0],I18N.pt.tracks[t][0]]),...s.people.flatMap(p=>[p.name,p.aff,p.talk])].join(' ')); });
+const hm = m => String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const esc = t => String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials = n => { const w = n.split(/\s+/).filter(x=>/^[A-ZÀ-Ý]/.test(x)); return w.length ? (w[0][0] + (w.length>1 ? w[w.length-1][0] : '')) : ''; };
+function liveDay(){ const iso = new Date(Date.now()-3*3600e3).toISOString().slice(0,10); return DATA.dates.indexOf(iso); }
+
+/* ---------------- state: this browser only ---------------- */
+const LS_KEY = 'genetica2026-public-v1';
+let state = {picks:{}, stars:{}, notes:{}, acks:{}, prefs:{maybe:true, alarm:10}, friend:null};
+function loadLocal(){ try{ const raw = localStorage.getItem(LS_KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+let ui = {tab:'explore', day:Math.max(0,liveDay()), view:'cal', q:'', track:'', type:'', room:'', pt:false, mine:false};
+try{ const u = JSON.parse(localStorage.getItem(LS_KEY+'-ui')||'{}'); ['tab','day','view'].forEach(k=>{ if(u[k]!==undefined) ui[k]=u[k]; }); }catch(e){}
+function saveUi(){ try{ localStorage.setItem(LS_KEY+'-ui', JSON.stringify({tab:ui.tab,day:ui.day,view:ui.view})); }catch(e){} }
+function commit(){ saveLocal(); renderAll(); }
+
+/* ---------------- share codes ---------------- */
+// Format: G26.<pairs> where each pick = 2 base36 chars (session index) + g|m
+function makeCode(){
+  const ids = Object.keys(state.picks).filter(id=>IDX[id]!==undefined).sort((a,b)=>IDX[a]-IDX[b]);
+  if(!ids.length) return '';
+  return 'G26.' + ids.map(id=>IDX[id].toString(36).padStart(2,'0') + (state.picks[id]==='going'?'g':'m')).join('');
+}
+function parseCode(txt){
+  const m = String(txt||'').replace(/\s+/g,'').match(/G26\.([0-9a-z]+)/i); if(!m) return null;
+  const body = m[1].toLowerCase(); if(body.length%3) return null;
+  const picks = {};
+  for(let i=0;i<body.length;i+=3){ const n = parseInt(body.slice(i,i+2),36), f = body[i+2]; if(!(n>=0 && n<S.length) || !'gm'.includes(f)) return null; picks[S[n].id] = f==='g'?'going':'maybe'; }
+  return Object.keys(picks).length ? picks : null;
+}
+const friendPicks = () => (state.friend && state.friend.picks) || {};
+
+/* ---------------- derived ---------------- */
+const overlap = (a,b) => a.day===b.day && a.start<b.end && b.start<a.end;
+const pairKey = (a,b) => [a,b].sort().join('|');
+function analyse(){
+  const going = Object.keys(state.picks).filter(id=>state.picks[id]==='going' && BY_ID[id]).map(id=>BY_ID[id]);
+  const clashIds = new Set(); const adj = {};
+  for(let i=0;i<going.length;i++) for(let j=i+1;j<going.length;j++){
+    const a=going[i], b=going[j];
+    if(overlap(a,b) && !state.acks[pairKey(a.id,b.id)]){ clashIds.add(a.id); clashIds.add(b.id); (adj[a.id]=adj[a.id]||[]).push(b.id); (adj[b.id]=adj[b.id]||[]).push(a.id); }
+  }
+  const groups=[]; const seen=new Set();
+  [...clashIds].forEach(id=>{ if(seen.has(id)) return; const g=[]; const st=[id]; seen.add(id);
+    while(st.length){ const x=st.pop(); g.push(BY_ID[x]); (adj[x]||[]).forEach(y=>{ if(!seen.has(y)){ seen.add(y); st.push(y);} }); }
+    g.sort((a,b)=>a.start-b.start||a.room.localeCompare(b.room)); groups.push(g); });
+  groups.sort((a,b)=>a[0].day-b[0].day||a[0].start-b[0].start);
+  const hops=[]; const sorted = going.slice().sort((a,b)=>a.day-b.day||a.start-b.start);
+  for(let i=0;i<sorted.length-1;i++){ const a=sorted[i], b=sorted[i+1];
+    if(a.day===b.day && b.start>=a.end && b.start-a.end<=10 && ROOM_WING[a.room] && ROOM_WING[b.room] && ROOM_WING[a.room]!==ROOM_WING[b.room]) hops.push([a,b]); }
+  return {going, clashIds, groups, hops};
+}
+
+/* ---------------- static text ---------------- */
+function applyStatic(){
+  document.documentElement.lang = LANG==='pt'?'pt-BR':'en';
+  document.querySelectorAll('[data-t]').forEach(el=>{ const v = T(el.dataset.t); if(typeof v==='string') el.textContent = v; });
+  document.querySelectorAll('#lang span').forEach(s=>s.classList.toggle('on', s.dataset.l===LANG));
+  document.getElementById('explore-sub').textContent = T('exploreSub')(S.length);
+  document.getElementById('plan-h').innerHTML = T('planH');
+  document.getElementById('q').placeholder = T('search');
+  document.getElementById('fname').placeholder = T('friendName');
+  document.getElementById('fcode').placeholder = T('friendCode');
+  const tr = document.getElementById('f-track');
+  tr.innerHTML = `<option value="">${esc(T('allTracks'))}</option>` + TRACK_KEYS.map(k=>`<option value="${k}">${esc(tTrack(k))}</option>`).join('');
+  document.getElementById('f-type').innerHTML = `<option value="">${esc(T('allTypes'))}</option>` + TYPES.map(t=>`<option value="${esc(t)}">${esc(tType(t))}</option>`).join('');
+  document.getElementById('f-room').innerHTML = `<option value="">${esc(T('allRooms'))}</option>` + ROOMS.map(([w,rs])=>`<optgroup label="${esc(I18N[LANG].wings[w])}">${rs.map(([r])=>`<option value="${esc(r)}">${esc(tRoom(r))}</option>`).join('')}</optgroup>`).join('');
+  document.getElementById('x-alarm').innerHTML = [0,5,10,15].map(n=>`<option value="${n}">${n?esc(T('minBefore')(n)):esc(T('none'))}</option>`).join('');
+  syncFilterInputs();
+}
+
+/* ---------------- Program ---------------- */
+function matches(s){
+  if(ui.track && !s.tracks.includes(ui.track)) return false;
+  if(ui.type && s.type!==ui.type) return false;
+  if(ui.room && s.room!==ui.room) return false;
+  if(ui.pt && s.pt) return false;
+  if(ui.mine && !state.picks[s.id]) return false;
+  if(ui.q){ const terms = fold(ui.q).split(/\s+/).filter(Boolean); if(!terms.every(t=>s.hay.includes(t))) return false; }
+  return true;
+}
+const filtering = () => !!(ui.q||ui.track||ui.type||ui.room||ui.pt||ui.mine);
+function renderLegend(){
+  document.getElementById('legend').innerHTML = ROOMS.map(([w,rs])=>`<div class="grp"><b class="label">${esc(I18N[LANG].wings[w])}</b>${rs.map(([r,v])=>`<button class="rpill ${ui.room&&ui.room!==r?'dim':''}" style="--rc:var(${v})" data-room="${esc(r)}">${esc(tRoom(r))}</button>`).join('')}</div>`).join('');
+}
+function renderDays(){
+  document.getElementById('days').innerHTML = DATA.dates.map((_,i)=>{
+    const ss = S.filter(s=>s.day===i); const m = ss.filter(matches).length;
+    const g = ss.filter(s=>state.picks[s.id]==='going').length, mb = ss.filter(s=>state.picks[s.id]==='maybe').length;
+    return `<button class="day" role="tab" aria-selected="${ui.day===i}" data-day="${i}"><b>${esc(dayShort(i))}</b><small>${filtering()?esc(T('match')(m)):`${ss.length} ${esc(T('sessions'))}`}</small><span class="meta"><span class="g">${g} ${esc(T('going'))}</span>${mb?` · ${mb} ${esc(T('maybe'))}`:''}</span></button>`; }).join('');
+}
+function whoLine(s){
+  const sp = s.people.filter(p=>p.role!=='Chair'); const ch = s.people.filter(p=>p.role==='Chair');
+  if(!s.people.length) return s.note || '';
+  const talks = sp.filter(p=>p.talk).length;
+  if(talks>1) return `${talks} · ${sp.map(p=>p.name.split(' ').slice(-1)[0]).join(', ')}`;
+  if(sp.length) return sp.map(p=>`${p.name}${p.aff?` (${p.aff.split(',')[0]})`:''}`).join(' · ');
+  return ch.length ? tRole('Chair')+': '+ch.map(p=>p.name).join(', ') : '';
+}
+function cardHtml(s, clashIds){
+  const st = state.picks[s.id]||''; const fr = friendPicks()[s.id];
+  const starred = s.people.some((p,i)=>state.stars[s.id+'#'+i]);
+  const q = st==='going' ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>${esc(T('goingB'))}` : st==='maybe' ? esc(T('maybeB')) : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M12 5v14M5 12h14"/></svg>${esc(T('add'))}`;
+  return `<article class="card ${st}" style="--rc:${rc(s.room)}">
+    <span class="tab-room">${esc(tRoom(s.room)||'—')}</span>${s.tracks[0]?`<span class="tab-area" title="${esc(s.tracks.map(t=>tTrack(t)).join(', '))}">${esc(tTrack(s.tracks[0],true))}${s.tracks.length>1?' +'+(s.tracks.length-1):''}</span>`:''}
+    <button class="open" data-open="${s.id}" aria-label="${esc(T('openDetails'))}: ${esc(s.title)}"></button>
+    <h3>${esc(s.title)}</h3>
+    ${s.series?`<div class="who" style="-webkit-line-clamp:1">${esc(s.series)}</div>`:''}
+    <div class="who">${esc(whoLine(s))}</div>
+    <div class="foot">${s.pt?`<span class="chip pt">${esc(T('ptOnly'))}</span>`:''}${clashIds.has(s.id)?`<span class="status clash">${esc(T('conflict'))}</span>`:''}${fr?`<span class="chip friend">${esc(state.friend.name)}: ${esc(fr==='going'?T('goingB'):T('maybeB'))}</span>`:''}${starred?`<span class="chip star">${esc(T('starred'))}</span>`:''}${state.notes[s.id]?`<span class="chip">${esc(T('note'))}</span>`:''}<button class="quick" data-quick="${s.id}" aria-label="${esc(st==='going'?T('removeAria'):T('addAria'))}">${q}</button></div>
+  </article>`;
+}
+function renderBlocks(){
+  const {clashIds} = analyse();
+  const ss = S.filter(s=>s.day===ui.day && matches(s));
+  const amb = filtering() ? [] : AMB.filter(a=>a.day===ui.day);
+  const groups = {};
+  ss.forEach(s=>{ const k = s.start+'-'+s.end+'-'+s.type; (groups[k]=groups[k]||{start:s.start,end:s.end,type:s.type,items:[]}).items.push(s); });
+  const rows = Object.values(groups).map(g=>({kind:'b',...g})).concat(amb.map(a=>({kind:'a',...a})));
+  rows.sort((a,b)=>a.start-b.start || (a.kind==='a')-(b.kind==='a') || a.end-b.end);
+  const out = rows.map(r=> r.kind==='a'
+    ? `<div class="ambient-row"><span class="mono">${hm(r.start)}–${hm(r.end)}</span><span class="pill">${esc(tAmb(r.title))}</span></div>`
+    : `<div class="block"><div class="when"><div class="t">${hm(r.start)}<i>– ${hm(r.end)}</i></div><div class="k label">${esc(tType(r.type))}${r.items.length>1?` · ${r.items.length}`:''}</div></div><div class="cards">${r.items.map(s=>cardHtml(s,clashIds)).join('')}</div></div>`).join('');
+  document.getElementById('blocks').innerHTML = out || `<div class="empty"><b>${esc(T('noMatch')(dayShort(ui.day)))}</b>${esc(T('noMatchHelp'))}</div>`;
+  document.getElementById('f-clear').hidden = !filtering();
+}
+
+/* ---------------- dialog ---------------- */
+let openId = null;
+function openDialog(id){ openId = id; renderDialog(); const d = document.getElementById('dlg'); if(!d.open){ try{ d.showModal(); }catch(e){ d.setAttribute('open',''); } } }
+function renderDialog(){
+  const s = BY_ID[openId]; if(!s) return;
+  const st = state.picks[s.id]||''; const fr = friendPicks()[s.id];
+  const others = S.filter(o=>o.id!==s.id && state.picks[o.id]==='going' && overlap(o,s));
+  const chairs = s.people.filter(p=>p.role==='Chair'); const spk = s.people.filter(p=>p.role!=='Chair');
+  const multi = spk.filter(p=>p.talk).length>1;
+  const person = (p,starable) => { const i = s.people.indexOf(p); return `<li class="person"><div class="av">${esc(initials(p.name)||'?')}</div><div>${p.talk?`<div class="talk">${esc(p.talk)}</div>`:''}<div class="nm">${p.role?`<span class="role">${esc(tRole(p.role))}</span>`:''}${esc(p.name)}</div>${p.aff?`<div class="af">${esc(p.aff)}</div>`:''}</div>${starable?`<button class="starbtn" data-star="${s.id}#${i}" aria-pressed="${!!state.stars[s.id+'#'+i]}" aria-label="★">★</button>`:'<span></span>'}</li>`; };
+  document.getElementById('dlg-inner').innerHTML = `
+    <div class="dlg-head" style="--rc:${rc(s.room)}">
+      <button class="x" data-close aria-label="Close">×</button>
+      <div class="eyebrow label">${esc(tType(s.type))}${s.series?` · ${esc(s.series)}`:''}</div>
+      <h2 id="dlg-title">${esc(s.title)}</h2>
+      <div class="meta"><span>${esc(dayLong(s.day))} · ${hm(s.start)}–${hm(s.end)}</span><span style="display:inline-flex;gap:5px;align-items:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>${esc(s.room?tRoomFull(s.room):T('roomUnknown'))}</span></div>
+    </div>
+    <div class="dlg-body">
+      <div class="seg" role="group">
+        <button data-set="" aria-pressed="${!st}">${esc(T('notGoing'))}</button>
+        <button data-set="maybe" aria-pressed="${st==='maybe'}">${esc(T('maybeB'))}</button>
+        <button class="go" data-set="going" aria-pressed="${st==='going'}">${esc(T('goingB'))}</button>
+      </div>
+      ${fr?`<div class="alert warn" style="background:var(--accent-soft);color:var(--ink)">${esc(T('inFriend')(state.friend.name))}: <b>${esc(fr==='going'?T('goingB'):T('maybeB'))}</b></div>`:''}
+      ${others.length?`<div class="alert ${st==='going'?'bad':'warn'}"><b>${esc((st==='going'?T('conflictsWith'):T('overlapsWith'))(others.length))}</b> ${others.map(o=>`${esc(o.title)} (${esc(tRoom(o.room))}, ${hm(o.start)}–${hm(o.end)})`).join('; ')}</div>`:''}
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${s.tracks.map(t=>`<span class="chip">${esc(tTrack(t))}</span>`).join('')}${s.pt?`<span class="chip pt">${esc(T('ics').ptOnly)}</span>`:''}</div>
+      ${spk.length?`<div class="sec"><h4 class="label">${esc(multi?T('talksStar'):(s.type==='Mini course'?T('instructors'):T('speakers')))}</h4><ul class="people">${spk.map(p=>person(p,multi)).join('')}</ul></div>`:''}
+      ${chairs.length?`<div class="sec"><h4 class="label">${esc(T('chair'))}</h4><ul class="people">${chairs.map(p=>person(p,false)).join('')}</ul></div>`:''}
+      ${s.note?`<div class="sec"><h4 class="label">${esc(T('about'))}</h4><p class="note" style="margin:0">${esc(s.note)}</p></div>`:''}
+      <div class="sec"><h4 class="label">${esc(T('myNotes'))}</h4><textarea id="note-input" placeholder="${esc(T('notesPh'))}">${esc(state.notes[s.id]||'')}</textarea></div>
+    </div>`;
+}
+
+/* ---------------- My schedule ---------------- */
+function renderPlan(){
+  const {going, groups, hops, clashIds} = analyse();
+  const maybe = Object.keys(state.picks).filter(id=>state.picks[id]==='maybe' && BY_ID[id]);
+  const cnt = document.getElementById('cnt'); cnt.textContent = going.length; cnt.classList.toggle('bad', groups.length>0);
+  const fp = friendPicks(); const fIds = Object.keys(fp).filter(id=>BY_ID[id]);
+  document.getElementById('friendbar').innerHTML = state.friend ? `<div class="friendbar"><span>${T('friendShowing')(esc(state.friend.name), fIds.length)}</span><span class="spacer"></span><button class="btn" data-friend="add">${esc(T('addAllMaybe'))}</button><button class="btn" data-friend="hide">${esc(T('hideFriend'))}</button></div>` : '';
+  document.getElementById('sumbar').innerHTML = `
+    <div class="stat"><b>${going.length}</b><span>${esc(T('goingN'))}</span></div>
+    <div class="stat"><b>${maybe.length}</b><span>${esc(T('maybeN'))}</span></div>
+    <div class="stat ${groups.length?'bad':''}"><b>${groups.length}</b><span>${esc(T('conflictsN')(groups.length))}</span></div>
+    ${hops.length?`<div class="stat"><b>${hops.length}</b><span>${esc(T('hopsN')(hops.length))}</span></div>`:''}
+    <span class="spacer"></span>
+    <button class="btn" id="copy-ics" ${going.length+maybe.length?'':'disabled'}>${esc(T('copyCal'))}</button>
+    <button class="btn primary" id="dl-ics" ${going.length+maybe.length?'':'disabled'}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>${esc(T('exportIcs'))}</button>`;
+  document.getElementById('x-maybe').checked = state.prefs.maybe!==false;
+  document.getElementById('x-alarm').value = String(state.prefs.alarm??10);
+  document.getElementById('conflicts').innerHTML = groups.length ? `<div class="panel bad"><h3><span class="dot"></span>${esc(T('resolve')(groups.length))}</h3>${groups.map(g=>{
+      const a=Math.min(...g.map(x=>x.start)), b=Math.max(...g.map(x=>x.end));
+      return `<div class="conf"><div class="hd label">${esc(dayShort(g[0].day))} · ${hm(a)}–${hm(b)}</div><div class="opts">${g.map(x=>`<div class="opt" style="--rc:${rc(x.room)}"><div class="t" data-open="${x.id}">${esc(x.title)}</div><div class="r"><span class="rpill" style="--rc:${rc(x.room)}">${esc(tRoom(x.room))}</span><span style="font-size:12px;color:var(--muted)">${hm(x.start)}–${hm(x.end)}</span><button class="keep" data-keep="${x.id}" data-group="${g.map(y=>y.id).join(',')}">${esc(T('keepThis'))}</button></div></div>`).join('')}</div><button class="ack" data-ack="${g.map(y=>y.id).join(',')}">${esc(T('keepAll'))}</button></div>`; }).join('')}<p class="note" style="margin:6px 0 0">${esc(T('keepNote'))}</p></div>` : '';
+  document.getElementById('hops').innerHTML = hops.length ? `<div class="panel hop"><h3><span class="dot"></span>${esc(T('hopsTitle'))}</h3>${hops.map(([a,b])=>`<div class="hopline">${esc(dayShort(a.day))} ${hm(a.end)} · ${esc(tRoom(a.room))} → <b>${esc(tRoom(b.room))}</b></div>`).join('')}</div>` : '';
+  document.getElementById('v-cal').setAttribute('aria-pressed', ui.view==='cal');
+  document.getElementById('v-list').setAttribute('aria-pressed', ui.view==='list');
+  document.getElementById('mycode').value = makeCode();
+  const mine = Object.keys(state.picks).filter(id=>BY_ID[id]).map(id=>BY_ID[id]);
+  const friendOnly = fIds.filter(id=>!state.picks[id]).map(id=>({...BY_ID[id], _friend:true}));
+  const all = mine.concat(friendOnly);
+  if(!all.length){ document.getElementById('calview').innerHTML = `<div class="empty"><b>${esc(T('emptyPlan'))}</b>${esc(T('emptyPlanHelp'))}</div>`; return; }
+  document.getElementById('calview').innerHTML = ui.view==='cal' ? calHtml(all, clashIds) : listHtml(all, clashIds);
+}
+function layoutDay(evs){
+  evs.sort((a,b)=>a.start-b.start||b.end-a.end);
+  const out=[]; let cluster=[], cEnd=-1;
+  const flush=()=>{ const cols=[]; cluster.forEach(e=>{ let c=cols.findIndex(end=>end<=e.start); if(c<0){c=cols.length;cols.push(0);} cols[c]=e.end; e._col=c; }); cluster.forEach(e=>{ e._n=cols.length; out.push(e); }); cluster=[]; };
+  evs.forEach(e=>{ if(e.start>=cEnd && cluster.length){ flush(); cEnd=-1; } cluster.push(e); cEnd=Math.max(cEnd,e.end); });
+  if(cluster.length) flush(); return out;
+}
+function calHtml(picks, clashIds){
+  const minM = 8*60, maxM = 23*60; const px = m => `calc(${m-minM} * var(--pmm))`;
+  const today = liveDay(); const fname = state.friend ? state.friend.name : '';
+  let h = `<div class="calwrap" id="calwrap"><div class="cal"><div class="colh" style="border-right:1px solid var(--line-2)"></div>${DATA.dates.map((_,i)=>`<div class="colh ${today===i?'today':''}"><b>${esc(dayShort(i))}</b><small>${picks.filter(p=>p.day===i&&!p._friend&&state.picks[p.id]==='going').length} ${esc(T('going'))}</small></div>`).join('')}`;
+  h += `<div class="axis" style="height:calc(${maxM-minM} * var(--pmm))">${Array.from({length:(maxM-minM)/60},(_,k)=>`<span style="top:calc(${k*60} * var(--pmm) + 6px)">${hm(minM+k*60)}</span>`).join('')}</div>`;
+  DATA.dates.forEach((_,i)=>{
+    const amb = AMB.filter(a=>a.day===i && a.end-a.start<=180).map(a=>`<div class="amb" style="top:${px(a.start)};height:calc(${a.end-a.start} * var(--pmm))">${esc(tAmb(a.title))}</div>`).join('');
+    const evs = layoutDay(picks.filter(p=>p.day===i).map(p=>({...p})));
+    const evh = evs.map(e=>{ const st = e._friend ? 'friend' : state.picks[e.id]; const w=100/e._n; const clash=!e._friend && clashIds.has(e.id);
+      return `<button class="ev ${st} ${clash?'clash':''}" data-open="${e.id}" style="--rc:${rc(e.room)};top:calc(${px(e.start)} + 1px);height:calc(${e.end-e.start} * var(--pmm) - 2px);left:calc(${e._col*w}% + 2px);width:calc(${w}% - 4px)">${clash?`<span class="flag">${esc(T('conflict').toUpperCase())}</span>`:''}${e._friend?`<span class="fb">${esc(fname)}</span>`:''}<span class="em">${hm(e.start)}–${hm(e.end)} · ${esc(tRoom(e.room))}</span><span class="et">${esc(e.title)}</span></button>`; }).join('');
+    h += `<div class="col" style="height:calc(${maxM-minM} * var(--pmm))">${amb}${evh}</div>`;
+  });
+  return h + '</div></div>';
+}
+function listHtml(picks, clashIds){
+  return `<div class="agenda">${DATA.dates.map((_,i)=>{ const ps = picks.filter(p=>p.day===i).sort((a,b)=>a.start-b.start); if(!ps.length) return '';
+    return `<h3 class="label">${esc(dayLong(i))}</h3>` + ps.map(s=>{ const st = s._friend ? '' : state.picks[s.id]; const stars=s.people.map((p,k)=>state.stars[s.id+'#'+k]?p:null).filter(Boolean);
+      return `<button class="arow ${!s._friend&&clashIds.has(s.id)?'clash':''} ${s._friend?'friend':''}" data-open="${s.id}" style="--rc:${rc(s.room)}"><span class="tab-room">${esc(tRoom(s.room))}</span>${s.tracks[0]?`<span class="tab-area">${esc(tTrack(s.tracks[0],true))}</span>`:''}<div class="t">${hm(s.start)}–${hm(s.end)}</div><div><div class="ti">${esc(s.title)}</div><div class="m">${st?`<span class="status ${st}">${esc(st==='going'?T('goingB'):T('maybeB'))}</span>`:''}${s._friend?`<span class="chip friend">${esc(state.friend.name)}</span>`:''}${!s._friend&&clashIds.has(s.id)?`<span class="status clash">${esc(T('conflict'))}</span>`:''}<span class="chip">${esc(tType(s.type))}</span></div>${stars.length?`<div class="sub">★ ${stars.map(p=>esc(p.talk||p.name)+' · '+esc(p.name)).join('<br>★ ')}</div>`:''}${state.notes[s.id]?`<div class="nt">${esc(state.notes[s.id])}</div>`:''}</div></button>`; }).join(''); }).join('')}</div>`;
+}
+
+/* ---------------- ICS + zip ---------------- */
+function icsEscape(t){ return String(t).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n'); }
+function fold75(line){ const enc = new TextEncoder(); if(enc.encode(line).length<=75) return line; const parts=[]; let cur='', bytes=0, limit=75;
+  for(const ch of line){ const b=enc.encode(ch).length; if(bytes+b>limit){ parts.push(cur); cur=''; bytes=0; limit=74; } cur+=ch; bytes+=b; } parts.push(cur); return parts.join('\r\n '); }
+function utcStamp(dateIso, minutes){ const [y,m,d]=dateIso.split('-').map(Number); return new Date(Date.UTC(y,m-1,d,0,minutes+180)).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,''); }
+function buildIcs(){
+  const L10 = T('ics'); const incMaybe = state.prefs.maybe!==false; const alarm = Number(state.prefs.alarm||0);
+  const ids = Object.keys(state.picks).filter(id=>BY_ID[id] && (state.picks[id]==='going' || (incMaybe && state.picks[id]==='maybe')));
+  const now = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const L = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Genetica 2026 unofficial planner//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','X-WR-CALNAME:Genética 2026','X-WR-TIMEZONE:America/Sao_Paulo'];
+  ids.map(id=>BY_ID[id]).sort((a,b)=>a.day-b.day||a.start-b.start).forEach(s=>{
+    const st = state.picks[s.id]; const desc = [`${tType(s.type)}${s.series?' · '+s.series:''}`];
+    if(s.tracks.length) desc.push(L10.track+': '+s.tracks.map(t=>tTrack(t)).join(', '));
+    if(s.pt) desc.push(L10.ptOnly);
+    const chairs = s.people.filter(p=>p.role==='Chair'); if(chairs.length) desc.push(L10.chair+': '+chairs.map(p=>p.name+(p.aff?` (${p.aff})`:'')).join('; '));
+    const spk = s.people.filter(p=>p.role!=='Chair');
+    if(spk.length){ desc.push(''); spk.forEach(p=>{ const k=s.people.indexOf(p); desc.push(`${state.stars[s.id+'#'+k]?'★ ':'• '}${p.talk?p.talk+' — ':''}${p.name}${p.aff?` (${p.aff})`:''}`); }); }
+    if(s.note) desc.push('', s.note);
+    if(state.notes[s.id]) desc.push('', L10.notes+': '+state.notes[s.id]);
+    L.push('BEGIN:VEVENT', `UID:${s.id}@genetica2026-planner`, `DTSTAMP:${now}`, `DTSTART:${utcStamp(DATA.dates[s.day], s.start)}`, `DTEND:${utcStamp(DATA.dates[s.day], s.end)}`,
+      'SUMMARY:'+icsEscape((st==='maybe'?L10.maybe:'')+s.title), 'LOCATION:'+icsEscape(`${tRoomFull(s.room)} — ${L10.loc}`),
+      'DESCRIPTION:'+icsEscape(desc.join('\n')), `STATUS:${st==='going'?'CONFIRMED':'TENTATIVE'}`, `TRANSP:${st==='going'?'OPAQUE':'TRANSPARENT'}`, 'CATEGORIES:'+icsEscape(tType(s.type)));
+    if(alarm>0) L.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEscape(s.title),`TRIGGER:-PT${alarm}M`,'END:VALARM');
+    L.push('END:VEVENT');
+  });
+  L.push('END:VCALENDAR');
+  return {text: L.map(fold75).join('\r\n')+'\r\n', count: ids.length};
+}
+const CRC_T = (()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c = CRC_T[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipOne(name, text){
+  const enc=new TextEncoder(); const data=enc.encode(text), nm=enc.encode(name), crc=crc32(data);
+  const d=new Date(); const dt=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF, dd=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+  const put=(dv,arr)=>arr.forEach(([o,v,s])=>s===4?dv.setUint32(o,v,true):dv.setUint16(o,v,true));
+  const lh=new DataView(new ArrayBuffer(30)); put(lh,[[0,0x04034b50,4],[4,20,2],[6,0x0800,2],[8,0,2],[10,dt,2],[12,dd,2],[14,crc,4],[18,data.length,4],[22,data.length,4],[26,nm.length,2],[28,0,2]]);
+  const cd=new DataView(new ArrayBuffer(46)); put(cd,[[0,0x02014b50,4],[4,20,2],[6,20,2],[8,0x0800,2],[10,0,2],[12,dt,2],[14,dd,2],[16,crc,4],[20,data.length,4],[24,data.length,4],[28,nm.length,2],[30,0,2],[32,0,2],[34,0,2],[36,0,2],[38,0,4],[42,0,4]]);
+  const end=new DataView(new ArrayBuffer(22)); put(end,[[0,0x06054b50,4],[4,0,2],[6,0,2],[8,1,2],[10,1,2],[12,46+nm.length,4],[16,30+nm.length+data.length,4],[20,0,2]]);
+  return new Blob([lh.buffer,nm,data,cd.buffer,nm,end.buffer],{type:'application/zip'});
+}
+async function exportIcs(){
+  const {text,count} = buildIcs(); if(!count){ toast(T('nothingExport')); return; }
+  let dl = null; try{ if(window.claude && window.claude.use) dl = await window.claude.use('downloads'); }catch(e){}
+  if(dl){
+    try{ await dl.save({filename:'genetica-2026-schedule.zip', data: zipOne('genetica-2026-schedule.ics', text)}); toast(T('savedN')(count)); }
+    catch(e){ if(e && e.code==='declined') return; if(e && e.code==='rate_limited'){ toast(T('promptOpen')); return; } showCopy(text); toast(T('saveUnavailable')); }
+    return;
+  }
+  try{ const url=URL.createObjectURL(new Blob([text],{type:'text/calendar'})); const a=document.createElement('a'); a.href=url; a.download='genetica-2026-schedule.ics'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); toast(T('exportedN')(count)); }
+  catch(e){ showCopy(text); }
+}
+function showCopy(text){ const box=document.getElementById('copyarea'); box.hidden=false; const ta=document.getElementById('copybox'); ta.value=text; ta.focus(); ta.select(); }
+async function copyText(text, okMsg, fallbackEl){
+  try{ await navigator.clipboard.writeText(text); toast(okMsg); return true; }
+  catch(e){ if(fallbackEl){ fallbackEl.focus(); fallbackEl.select(); } return false; }
+}
+let tt; function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.hidden=false; clearTimeout(tt); tt=setTimeout(()=>t.hidden=true, 3800); }
+
+/* ---------------- events ---------------- */
+function setPick(id, v){ if(v) state.picks[id]=v; else delete state.picks[id]; commit(); }
+function renderAll(){
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.tab===ui.tab));
+  document.getElementById('explore').hidden = ui.tab!=='explore';
+  document.getElementById('plan').hidden = ui.tab!=='plan';
+  renderLegend(); renderDays(); renderBlocks(); renderPlan();
+  if(openId && document.getElementById('dlg').open && document.activeElement!==document.getElementById('note-input')) renderDialog();
+}
+function scrollCalToToday(){ requestAnimationFrame(()=>{ const w=document.getElementById('calwrap'); if(!w) return; const d=liveDay(); if(d>0){ const col=w.querySelectorAll('.colh')[d+1]; if(col) w.scrollLeft = col.offsetLeft-54; } }); }
+function syncFilterInputs(){ document.getElementById('q').value=ui.q; document.getElementById('f-track').value=ui.track; document.getElementById('f-type').value=ui.type; document.getElementById('f-room').value=ui.room; document.getElementById('f-pt').checked=ui.pt; document.getElementById('f-mine').checked=ui.mine; }
+
+document.addEventListener('click', e=>{
+  const t = e.target.closest('[data-quick],[data-open],[data-tab],[data-day],[data-room],[data-set],[data-star],[data-close],[data-keep],[data-ack],[data-friend],#dl-ics,#copy-ics,#v-cal,#v-list,#f-clear,#copycode,#compare,#lang');
+  if(!t) return;
+  if(t.dataset.quick){ const id=t.dataset.quick; setPick(id, state.picks[id]==='going' ? '' : 'going'); toast(state.picks[id]? T('added'):T('removed')); return; }
+  if(t.dataset.open){ openDialog(t.dataset.open); return; }
+  if(t.dataset.tab){ ui.tab=t.dataset.tab; saveUi(); renderAll(); window.scrollTo({top:0}); if(ui.tab==='plan') scrollCalToToday(); return; }
+  if(t.dataset.day){ ui.day=+t.dataset.day; saveUi(); renderDays(); renderBlocks(); return; }
+  if(t.dataset.room!==undefined && t.classList.contains('rpill')){ ui.room = ui.room===t.dataset.room ? '' : t.dataset.room; document.getElementById('f-room').value=ui.room; renderLegend(); renderDays(); renderBlocks(); return; }
+  if(t.dataset.set!==undefined){ setPick(openId, t.dataset.set); return; }
+  if(t.dataset.star){ const k=t.dataset.star; if(state.stars[k]) delete state.stars[k]; else state.stars[k]=1; commit(); return; }
+  if(t.dataset.close!==undefined){ document.getElementById('dlg').close(); return; }
+  if(t.dataset.keep){ t.dataset.group.split(',').forEach(id=>{ if(id!==t.dataset.keep && state.picks[id]==='going') state.picks[id]='maybe'; }); commit(); toast(T('resolved')); return; }
+  if(t.dataset.ack){ const ids=t.dataset.ack.split(','); ids.forEach((a,i)=>ids.slice(i+1).forEach(b=>{ if(overlap(BY_ID[a],BY_ID[b])) state.acks[pairKey(a,b)]=1; })); commit(); return; }
+  if(t.dataset.friend==='hide'){ state.friend=null; commit(); return; }
+  if(t.dataset.friend==='add'){ let n=0; Object.keys(friendPicks()).forEach(id=>{ if(BY_ID[id] && !state.picks[id]){ state.picks[id]='maybe'; n++; } }); commit(); toast(T('friendAdded')(n)); return; }
+  if(t.id==='dl-ics'){ exportIcs(); return; }
+  if(t.id==='copy-ics'){ const {text,count}=buildIcs(); if(count) copyText(text, T('copiedN')(count)).then(ok=>{ if(!ok){ showCopy(text); toast(T('selectCopy')); } }); return; }
+  if(t.id==='v-cal'||t.id==='v-list'){ ui.view = t.id==='v-cal'?'cal':'list'; saveUi(); renderPlan(); if(ui.view==='cal') scrollCalToToday(); return; }
+  if(t.id==='f-clear'){ Object.assign(ui,{q:'',track:'',type:'',room:'',pt:false,mine:false}); syncFilterInputs(); renderLegend(); renderDays(); renderBlocks(); return; }
+  if(t.id==='copycode'){ const c=makeCode(); if(!c){ toast(T('codeEmpty')); return; } copyText(c, T('codeCopied'), document.getElementById('mycode')); return; }
+  if(t.id==='compare'){ const p=parseCode(document.getElementById('fcode').value); if(!p){ toast(T('codeBad')); return; } const nm=(document.getElementById('fname').value||'').trim().slice(0,30)||T('friendDefault'); state.friend={name:nm,picks:p}; document.getElementById('fcode').value=''; document.getElementById('fname').value=''; commit(); window.scrollTo({top:0,behavior:'smooth'}); return; }
+  if(t.id==='lang'){ setLang(LANG==='pt'?'en':'pt', true); return; }
+});
+document.getElementById('dlg').addEventListener('click', e=>{ if(e.target.id==='dlg') e.target.close(); });
+document.getElementById('dlg').addEventListener('close', ()=>{ openId=null; });
+let noteTimer; document.addEventListener('input', e=>{
+  if(e.target.id==='note-input'){ const v=e.target.value, id=openId; clearTimeout(noteTimer); noteTimer=setTimeout(()=>{ if(!id) return; if(v.trim()) state.notes[id]=v; else delete state.notes[id]; commit(); }, 500); }
+});
+const bindF = (id,key,checked) => document.getElementById(id).addEventListener(checked?'change':'input', e=>{ ui[key]= checked ? e.target.checked : e.target.value; renderLegend(); renderDays(); renderBlocks(); });
+bindF('q','q'); bindF('f-track','track'); bindF('f-type','type'); bindF('f-room','room'); bindF('f-pt','pt',true); bindF('f-mine','mine',true);
+document.getElementById('x-maybe').addEventListener('change', e=>{ state.prefs.maybe=e.target.checked; commit(); });
+document.getElementById('x-alarm').addEventListener('change', e=>{ state.prefs.alarm=Number(e.target.value); commit(); });
+
+/* theme + language */
+const THEME_KEY='genetica2026-public-theme', LANG_KEY='genetica2026-public-lang';
+function effectiveTheme(){ const a=document.documentElement.getAttribute('data-theme'); if(a==='dark'||a==='light') return a; return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'; }
+function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); }
+try{ const t=localStorage.getItem(THEME_KEY); applyTheme(t==='dark'||t==='light'?t:effectiveTheme()); }catch(e){ applyTheme(effectiveTheme()); }
+document.getElementById('theme').addEventListener('click', ()=>{ const t = effectiveTheme()==='dark'?'light':'dark'; applyTheme(t); try{ localStorage.setItem(THEME_KEY,t); }catch(e){} });
+function setLang(l, remember){ LANG=l; if(remember){ try{ localStorage.setItem(LANG_KEY,l); }catch(e){} } applyStatic(); renderAll(); }
+(function initLang(){ let l=null; try{ l=localStorage.getItem(LANG_KEY); }catch(e){}
+  if(l!=='pt' && l!=='en'){ const langs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language||'en']); l = /^pt\b/i.test(langs[0]||'') ? 'pt' : 'en'; }
+  LANG=l; })();
+
+loadLocal();
+try{ if(!localStorage.getItem(LS_KEY)) document.getElementById('help').open = true; }catch(e){ document.getElementById('help').open = true; }
+applyStatic(); renderAll(); if(ui.tab==='plan') scrollCalToToday();
+</script>
+
+</body>
+</html>
